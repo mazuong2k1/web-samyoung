@@ -297,6 +297,10 @@ a {
   animation-delay: 0.4s;
 }
 
+.float-messenger-second {
+  animation-delay: 0.55s;
+}
+
 @keyframes bubbleZoom {
   0%,
   100% {
