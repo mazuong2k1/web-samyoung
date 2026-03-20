@@ -10,12 +10,12 @@ import ProductDetailPage from './components/sections/ProductDetailPage.vue'
 const logoUrl = '/logo.jpg'
 
 const menuItems = [
-  'Trang chủ',
-  'Về chúng tôi',
-  'Đối tác',
-  'Tài liệu',
-  'Tin tức',
-  'Liên hệ',
+  { label: 'TRANG CHỦ', path: '/' },
+  { label: 'VỀ CHÚNG TÔI', path: '/ve-chung-toi' },
+  { label: 'ĐỐI TÁC', path: '/doi-tac' },
+  { label: 'TÀI LIỆU', path: '/tai-lieu' },
+  { label: 'TIN TỨC', path: '/tin-tuc' },
+  { label: 'LIÊN HỆ', path: '/lien-he' },
 ]
 
 const sidebarCategories = [
@@ -238,7 +238,12 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="site-shell">
-    <SiteHeader :menu-items="menuItems" :logo-url="logoUrl" />
+    <SiteHeader
+      :menu-items="menuItems"
+      :current-path="currentPath"
+      :logo-url="logoUrl"
+      @navigate="navigate"
+    />
 
     <main>
       <template v-if="isDetailPage">

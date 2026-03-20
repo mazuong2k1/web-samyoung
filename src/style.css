@@ -211,6 +211,12 @@ a {
   background: #eff5fb;
 }
 
+.nav-link-active {
+  color: var(--primary);
+  background: #eff5fb;
+  box-shadow: inset 0 -2px 0 var(--primary);
+}
+
 .nav-link-featured {
   width: 238px;
   background: var(--primary);
@@ -356,6 +362,9 @@ a {
   text-decoration: none;
   padding: 8px 10px;
   font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 

@@ -1,8 +1,29 @@
 <script setup lang="ts">
-defineProps<{
-  menuItems: string[]
+type HeaderMenuItem = {
+  label: string
+  path: string
+}
+
+const props = defineProps<{
+  menuItems: HeaderMenuItem[]
+  currentPath: string
   logoUrl?: string
 }>()
+
+const emit = defineEmits<{
+  (event: 'navigate', path: string): void
+}>()
+
+const normalizePath = (path: string) => {
+  const cleaned = path.replace(/\/+$/, '')
+  return cleaned === '' ? '/' : cleaned
+}
+
+const isActive = (path: string) => normalizePath(props.currentPath) === normalizePath(path)
+
+const navigateTo = (path: string) => {
+  emit('navigate', path)
+}
 
 const topPerks = [
   {
@@ -36,7 +57,7 @@ const topPerks = [
 
   <header class="topbar">
     <div class="container topbar-inner">
-      <a href="#" class="logo-wrap" aria-label="Samyoung">
+      <a href="/" class="logo-wrap" aria-label="Samyoung" @click.prevent="navigateTo('/')">
         <img
           v-if="logoUrl"
           :src="logoUrl"
@@ -63,9 +84,18 @@ const topPerks = [
 
   <nav class="navbar">
     <div class="container nav-inner">
-      <a href="#" class="nav-link nav-link-featured">☰ DANH MỤC SẢN PHẨM</a>
-      <a v-for="item in menuItems" :key="item" href="#" class="nav-link">
-        {{ item }}
+      <a href="/" class="nav-link nav-link-featured" @click.prevent="navigateTo('/')">
+        ☰ DANH MỤC SẢN PHẨM
+      </a>
+      <a
+        v-for="item in menuItems"
+        :key="item.path"
+        :href="item.path"
+        class="nav-link"
+        :class="{ 'nav-link-active': isActive(item.path) }"
+        @click.prevent="navigateTo(item.path)"
+      >
+        {{ item.label }}
       </a>
     </div>
   </nav>
