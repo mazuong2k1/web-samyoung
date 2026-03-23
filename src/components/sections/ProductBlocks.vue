@@ -83,14 +83,8 @@ const badgeClass = (tag: string) => {
   return 'is-default'
 }
 
-const displayTags = (block: ProductBlock, item: ProductItem) => {
-  if (item.tags?.length) return item.tags
-  const blockKey = block.title
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-  if (blockKey.includes('san pham moi nhat')) return ['NEW']
-  return []
+const displayTags = (_block: ProductBlock, item: ProductItem) => {
+  return item.tags?.length ? item.tags : []
 }
 
 const displayPrice = (item: ProductItem) => {

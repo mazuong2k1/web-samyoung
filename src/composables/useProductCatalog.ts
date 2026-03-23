@@ -47,7 +47,6 @@ const safeLoad = (): ProductBlock[] => {
 
 const productBlocks = ref<ProductBlock[]>(safeLoad())
 let watching = false
-let hydratedFromApi = false
 let loadingFromApi: Promise<void> | null = null
 
 const saveToStorage = () => {
@@ -89,13 +88,22 @@ const rowToItem = (row: FirebaseProductRow): ProductItem => ({
 
 const buildBlocksFromApi = (rows: FirebaseProductRow[]): ProductBlock[] => {
   const groups = new Map<string, ProductItem[]>()
+  const latestTitle = 'SẢN PHẨM MỚI NHẤT'
 
   rows.forEach((row) => {
-    const title = row.blockTitle?.trim() || 'SẢN PHẨM MỚI NHẤT'
+    const title = row.blockTitle?.trim() || latestTitle
     const nextItems = groups.get(title) ?? []
     nextItems.push(rowToItem(row))
     groups.set(title, nextItems)
   })
+
+  // Block "SẢN PHẨM MỚI NHẤT" ưu tiên lấy theo tag NEW (id=1).
+  const latestItems = rows
+    .filter((row) => Array.isArray(row.tags) && row.tags.some((tag) => Number(tag) === 1))
+    .map(rowToItem)
+  if (latestItems.length > 0) {
+    groups.set(latestTitle, latestItems)
+  }
 
   const seedOrder = seedProductBlocks.map((b) => b.title)
   const dynamicOrder = [...groups.keys()].filter((title) => !seedOrder.includes(title))
@@ -114,7 +122,6 @@ const buildBlocksFromApi = (rows: FirebaseProductRow[]): ProductBlock[] => {
 }
 
 const hydrateFromApi = async () => {
-  if (hydratedFromApi) return
   if (loadingFromApi) return loadingFromApi
 
   loadingFromApi = (async () => {
@@ -126,7 +133,6 @@ const hydrateFromApi = async () => {
     } catch {
       // Giữ dữ liệu local/static khi API lỗi để tránh trắng trang.
     } finally {
-      hydratedFromApi = true
       loadingFromApi = null
     }
   })()

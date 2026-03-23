@@ -23,6 +23,7 @@ declare module 'vue' {
     APopconfirm: typeof import('ant-design-vue/es')['Popconfirm']
     AppBreadcrumbs: typeof import('./src/components/layout/AppBreadcrumbs.vue')['default']
     ASelect: typeof import('ant-design-vue/es')['Select']
+    ASpin: typeof import('ant-design-vue/es')['Spin']
     ATabPane: typeof import('ant-design-vue/es')['TabPane']
     ATabs: typeof import('ant-design-vue/es')['Tabs']
     ATextarea: typeof import('ant-design-vue/es')['Textarea']

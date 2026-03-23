@@ -77,6 +77,9 @@ const form = reactive({
   price: 'Liên hệ',
   priceIsContact: true,
   views: 0,
+  soldCount: 0,
+  rating: 0,
+  ratingCount: 0,
   brand: 'SAMYOUNG',
   origin: 'Việt Nam',
   tax: '',
@@ -96,7 +99,6 @@ const tagOptions = [
   { label: 'TOP BÁN CHẠY', value: 2 },
   { label: 'HOT', value: 3 },
 ]
-const tagLabelMap: Record<number, string> = Object.fromEntries(tagOptions.map((t) => [t.value, t.label]))
 
 const blockTitles = computed(() => {
   if (categoryRows.value.length > 0) {
@@ -202,6 +204,9 @@ const resetForm = () => {
   form.price = 'Liên hệ'
   form.priceIsContact = true
   form.views = 0
+  form.soldCount = 0
+  form.rating = 0
+  form.ratingCount = 0
   form.brand = 'SAMYOUNG'
   form.origin = 'Việt Nam'
   form.tax = ''
@@ -243,6 +248,24 @@ const onHotlineInput = (val: string) => {
   form.hotline = val.replace(/[^\d\s]/g, '').replace(/\s{2,}/g, ' ').trimStart()
 }
 
+const parseNonNegativeInt = (value: unknown) => {
+  const num = Number(value)
+  if (!Number.isFinite(num)) return 0
+  return Math.max(0, Math.floor(num))
+}
+
+const parseRatingValue = (value: unknown) => {
+  const num = Number(value)
+  if (!Number.isFinite(num)) return 0
+  return Math.min(5, Math.max(0, Number(num.toFixed(1))))
+}
+
+const parseIntegerInput = (value: string | number) => String(value ?? '').replace(/[^\d]/g, '')
+const parseRatingInput = (value: string | number) =>
+  String(value ?? '')
+    .replace(',', '.')
+    .replace(/[^0-9.]/g, '')
+
 const collectMissingRequiredFields = () => {
   const missing: string[] = []
   if (!form.blockTitle.trim()) missing.push('Nhóm sản phẩm')
@@ -254,6 +277,8 @@ const collectMissingRequiredFields = () => {
   if (!form.stockStatus.trim()) missing.push('Tình trạng kho')
   if (!form.hotline.trim()) missing.push('Hotline')
   if (!form.priceIsContact && !form.price.trim()) missing.push('Giá hiển thị')
+  if (!form.priceIsContact && !/\d/.test(form.price)) missing.push('Giá hiển thị hợp lệ')
+  if (form.hotline.trim() && !/^[\d\s]+$/.test(form.hotline)) missing.push('Hotline hợp lệ (chỉ số)')
   return missing
 }
 
@@ -332,11 +357,6 @@ const normalizeTagIds = (tags: unknown) => {
     .filter((tag) => Number.isFinite(tag))
 }
 
-const formatTags = (tags: number[] | undefined) => {
-  if (!tags || tags.length === 0) return '-'
-  return tags.map((id) => tagLabelMap[id] ?? `TAG ${id}`).join(', ')
-}
-
 const openCreate = () => {
   isEdit.value = false
   editingId.value = ''
@@ -364,6 +384,9 @@ const openEdit = (id: string) => {
       ? normalizeStoredPriceForInput(item.price ?? '')
       : (item.price ?? 'Liên hệ')
   form.views = typeof item.views === 'number' ? item.views : Number(item.views) || 0
+  form.soldCount = typeof item.soldCount === 'number' ? item.soldCount : Number(item.soldCount) || 0
+  form.rating = typeof item.rating === 'number' ? item.rating : Number(item.rating) || 0
+  form.ratingCount = typeof item.ratingCount === 'number' ? item.ratingCount : Number(item.ratingCount) || 0
   form.brand = item.brand ?? 'SAMYOUNG'
   form.origin = item.origin ?? 'Việt Nam'
   form.tax = item.tax ?? ''
@@ -406,7 +429,10 @@ const submit = async () => {
     code: form.code.trim(),
     price: form.priceIsContact ? 'Liên hệ' : form.price.trim(),
     priceIsContact: form.priceIsContact,
-    views: Number(form.views) || 0,
+    views: parseNonNegativeInt(form.views),
+    soldCount: parseNonNegativeInt(form.soldCount),
+    rating: parseRatingValue(form.rating),
+    ratingCount: parseNonNegativeInt(form.ratingCount),
     brand: form.brand.trim(),
     origin: form.origin.trim(),
     tax: form.tax.trim(),
@@ -601,7 +627,6 @@ onMounted(() => {
         :current-page="currentPage"
         :page-size="PAGE_SIZE"
         :total="totalItems"
-        :format-tags="(tags) => formatTags(normalizeTagIds(tags))"
         @create="openCreate"
         @reload="resetAll"
         @edit="openEdit"
@@ -721,8 +746,47 @@ onMounted(() => {
             <a-input v-model:value="form.tab" />
           </a-form-item>
           <a-form-item label="Lượt xem (số)">
-            <a-input-number v-model:value="form.views" :min="0" style="width: 100%" />
+            <a-input-number
+              v-model:value="form.views"
+              :min="0"
+              :precision="0"
+              :parser="parseIntegerInput"
+              style="width: 100%"
+            />
           </a-form-item>
+        </div>
+        <div class="admin-product-form-grid">
+          <a-form-item label="Lượt bán">
+            <a-input-number
+              v-model:value="form.soldCount"
+              :min="0"
+              :precision="0"
+              :parser="parseIntegerInput"
+              style="width: 100%"
+            />
+          </a-form-item>
+          <a-form-item label="Điểm đánh giá (0-5)">
+            <a-input-number
+              v-model:value="form.rating"
+              :min="0"
+              :max="5"
+              :step="0.1"
+              :parser="parseRatingInput"
+              style="width: 100%"
+            />
+          </a-form-item>
+        </div>
+        <div class="admin-product-form-grid">
+          <a-form-item label="Số lượt đánh giá">
+            <a-input-number
+              v-model:value="form.ratingCount"
+              :min="0"
+              :precision="0"
+              :parser="parseIntegerInput"
+              style="width: 100%"
+            />
+          </a-form-item>
+          <div />
         </div>
 
         <p class="admin-form-section-title">Giá & tồn</p>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { FirebaseProductRow } from '../../services/firebaseApi'
+import { useRouter } from 'vue-router'
+import { toSlug } from '../../data/siteData'
 
 defineProps<{
   dashboard: { totalBlocks: number; totalProducts: number; withTabs: number }
@@ -8,8 +10,24 @@ defineProps<{
   currentPage: number
   pageSize: number
   total: number
-  formatTags: (tags: unknown) => string
 }>()
+
+const TAG_META: Record<number, { label: string; tone: 'new' | 'top' | 'hot' | 'default' }> = {
+  1: { label: 'NEW', tone: 'new' },
+  2: { label: 'TOP BÁN CHẠY', tone: 'top' },
+  3: { label: 'HOT', tone: 'hot' },
+}
+
+const normalizeTagIds = (tags: unknown) => {
+  if (!Array.isArray(tags)) return [] as number[]
+  return tags.map((tag) => Number(tag)).filter((tag) => Number.isFinite(tag))
+}
+
+const tagItems = (tags: unknown) =>
+  normalizeTagIds(tags).map((id) => ({
+    label: TAG_META[id]?.label ?? `TAG ${id}`,
+    tone: TAG_META[id]?.tone ?? 'default',
+  }))
 
 const emit = defineEmits<{
   (event: 'create'): void
@@ -18,9 +36,25 @@ const emit = defineEmits<{
   (event: 'delete', id: string, name: string): void
   (event: 'page-change', page: number): void
 }>()
+const router = useRouter()
 
 const onPageChange = (page: number) => {
   emit('page-change', page)
+}
+
+const getDetailPath = (item: FirebaseProductRow) => {
+  if (item.href?.trim()) {
+    const h = item.href.trim().replace(/^\//, '')
+    if (h.startsWith('san-pham/')) return `/${h}`
+    return `/san-pham/${h}`
+  }
+  if (item.slug?.trim()) return `/san-pham/${item.slug.trim()}`
+  if (item.code?.trim()) return `/san-pham/${toSlug(item.code)}`
+  return `/san-pham/${toSlug(item.name)}`
+}
+
+const openDetail = (item: FirebaseProductRow) => {
+  void router.push(getDetailPath(item))
 }
 </script>
 
@@ -54,14 +88,24 @@ const onPageChange = (page: number) => {
   </div>
 
   <div class="admin-table-wrap">
-    <table class="admin-table">
+    <div v-if="loadingRows" class="admin-table-loading">
+      <a-spin size="large" />
+      <span>Đang tải dữ liệu sản phẩm...</span>
+    </div>
+    <table class="admin-table admin-table--products">
       <thead>
         <tr>
           <th>Ảnh</th>
           <th>Tên sản phẩm</th>
+          <th>Mã</th>
+          <th>Giá</th>
+          <th>Thương hiệu</th>
           <th>Nhóm</th>
           <th>Tag</th>
           <th>Tab</th>
+          <th>Xem / Bán</th>
+          <th>Đánh giá</th>
+          <th>Tồn kho</th>
           <th>Đường dẫn</th>
           <th>Tạo lúc</th>
           <th>Cập nhật</th>
@@ -69,16 +113,34 @@ const onPageChange = (page: number) => {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in rows" :key="item.id">
+        <tr v-for="item in rows" :key="item.id" class="admin-row-clickable" @click="openDetail(item)">
           <td><img :src="item.imageUrl" :alt="item.name" class="admin-thumb" /></td>
           <td>{{ item.name }}</td>
+          <td>{{ item.code || '-' }}</td>
+          <td>{{ item.priceIsContact === false ? (item.price || '-') : 'Liên hệ' }}</td>
+          <td>{{ item.brand || '-' }}</td>
           <td>{{ item.blockTitle }}</td>
-          <td>{{ formatTags(item.tags) }}</td>
+          <td>
+            <div v-if="tagItems(item.tags).length" class="admin-tag-list">
+              <span
+                v-for="tag in tagItems(item.tags)"
+                :key="`${item.id}-${tag.label}`"
+                class="admin-tag-chip"
+                :class="`is-${tag.tone}`"
+              >
+                {{ tag.label }}
+              </span>
+            </div>
+            <span v-else>-</span>
+          </td>
           <td>{{ item.tab || '-' }}</td>
+          <td>{{ Number(item.views ?? 0) }} / {{ Number(item.soldCount ?? 0) }}</td>
+          <td>{{ Number(item.rating ?? 0).toFixed(1) }} ({{ Number(item.ratingCount ?? 0) }})</td>
+          <td>{{ item.stockStatus || '-' }}</td>
           <td>{{ item.href || '-' }}</td>
           <td>{{ item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : '-' }}</td>
           <td>{{ item.updatedAt ? new Date(item.updatedAt).toLocaleString('vi-VN') : '-' }}</td>
-          <td class="admin-actions">
+          <td class="admin-actions" @click.stop>
             <div class="admin-actions-inner">
               <a-button size="small" class="admin-action-btn admin-action-btn--edit" @click="emit('edit', item.id)">
                 <span aria-hidden="true">✏️</span>
