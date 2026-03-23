@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 type ProductItem = {
   name: string
   imageUrl: string
+  tags?: string[]
   tab?: string
   href?: string
 }
@@ -66,6 +67,17 @@ const getDetailPath = (item: ProductItem) => {
 
 const handleNavigate = (item: ProductItem) => {
   void router.push(getDetailPath(item))
+}
+
+const badgeClass = (tag: string) => {
+  const key = tag
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+  if (key.includes('new') || key.includes('moi')) return 'is-new'
+  if (key.includes('top') || key.includes('ban chay')) return 'is-top'
+  if (key.includes('hot')) return 'is-hot'
+  return 'is-default'
 }
 
 const scrollSliderByCard = (title: string, direction: 'prev' | 'next') => {
@@ -176,6 +188,16 @@ onBeforeUnmount(() => {
               :class="{ 'block-card-link': Boolean(item.href) }"
               @click="handleNavigate(item)"
             >
+              <div v-if="item.tags?.length" class="block-card-badges">
+                <span
+                  v-for="tag in item.tags"
+                  :key="`${item.name}-${tag}`"
+                  class="block-badge"
+                  :class="badgeClass(tag)"
+                >
+                  {{ tag }}
+                </span>
+              </div>
               <img :src="item.imageUrl" :alt="item.name" class="block-card-thumb" />
               <h3>{{ item.name }}</h3>
               <p>Giá: Liên hệ</p>
@@ -199,6 +221,16 @@ onBeforeUnmount(() => {
             :class="{ 'block-card-link': Boolean(item.href) }"
             @click="handleNavigate(item)"
           >
+            <div v-if="item.tags?.length" class="block-card-badges">
+              <span
+                v-for="tag in item.tags"
+                :key="`${item.name}-${tag}`"
+                class="block-badge"
+                :class="badgeClass(tag)"
+              >
+                {{ tag }}
+              </span>
+            </div>
             <img :src="item.imageUrl" :alt="item.name" class="block-card-thumb" />
             <h3>{{ item.name }}</h3>
             <p>Giá: Liên hệ</p>

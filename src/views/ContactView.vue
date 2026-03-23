@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import { message } from 'ant-design-vue'
 import type { Rule } from 'ant-design-vue/es/form'
 import AppBreadcrumbs from '../components/layout/AppBreadcrumbs.vue'
+import { createFirebaseContact } from '../services/firebaseApi'
 
 const form = reactive({
   fullName: '',
@@ -12,6 +14,7 @@ const form = reactive({
 })
 
 const submitted = ref(false)
+const submitting = ref(false)
 
 const rules: Record<string, Rule[]> = {
   fullName: [
@@ -68,12 +71,34 @@ const rules: Record<string, Rule[]> = {
   ],
 }
 
-const onFinish = () => {
-  submitted.value = true
-  window.setTimeout(() => {
-    submitted.value = false
-  }, 4000)
-  // TODO: gửi API / email backend
+const onFinish = async () => {
+  submitting.value = true
+  try {
+    await createFirebaseContact({
+      fullName: form.fullName.trim(),
+      address: form.address.trim(),
+      phone: form.phone.trim(),
+      email: form.email.trim(),
+      message: form.message.trim(),
+    })
+
+    submitted.value = true
+    form.fullName = ''
+    form.address = ''
+    form.phone = ''
+    form.email = ''
+    form.message = ''
+
+    void message.success('Gửi liên hệ thành công. Chúng tôi sẽ phản hồi sớm.')
+    window.setTimeout(() => {
+      submitted.value = false
+    }, 4000)
+  } catch (error) {
+    const text = error instanceof Error ? error.message : 'Lỗi không xác định'
+    void message.error(`Không thể gửi liên hệ: ${text}`)
+  } finally {
+    submitting.value = false
+  }
 }
 
 const company = {
@@ -273,7 +298,12 @@ const socials = [
             </p>
 
             <a-form-item>
-              <a-button type="primary" html-type="submit" class="contact-submit contact-submit-ant">
+              <a-button
+                type="primary"
+                html-type="submit"
+                class="contact-submit contact-submit-ant"
+                :loading="submitting"
+              >
                 Gửi đi
               </a-button>
             </a-form-item>

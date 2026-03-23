@@ -2,14 +2,16 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import ProductDetailPage from '../components/sections/ProductDetailPage.vue'
-import { productBlocks, productDetail, toSlug } from '../data/siteData'
+import { useProductCatalog } from '../composables/useProductCatalog'
+import { productDetail, toSlug } from '../data/siteData'
 
 const route = useRoute()
+const { productBlocks } = useProductCatalog()
 
 const slug = computed(() => (route.params.slug as string) ?? '')
 
 const findItemBySlug = (s: string) => {
-  const allItems = productBlocks.flatMap((block) => block.items)
+  const allItems = productBlocks.value.flatMap((block) => block.items)
   return allItems.find((entry) => {
     if (entry.href) {
       const h = entry.href.replace(/^\//, '').replace(/^san-pham\//, '')

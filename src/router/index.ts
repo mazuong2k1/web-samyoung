@@ -6,6 +6,7 @@ import AboutView from '../views/AboutView.vue'
 import PartnersView from '../views/PartnersView.vue'
 import DocumentsView from '../views/DocumentsView.vue'
 import NewsView from '../views/NewsView.vue'
+import AdminView from '../views/AdminView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 
 const router = createRouter({
@@ -57,6 +58,12 @@ const router = createRouter({
       name: 'contact',
       component: ContactView,
       meta: { title: 'Liên hệ' },
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: AdminView,
+      meta: { title: 'Admin' },
     },
     {
       path: '/:pathMatch(.*)*',

@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import HomeShowcase from '../components/sections/HomeShowcase.vue'
 import ProductBlocks from '../components/sections/ProductBlocks.vue'
-import { productBlocks, quickTiles, sidebarCategories } from '../data/siteData'
+import { useProductCatalog } from '../composables/useProductCatalog'
+import { usePublicCategories } from '../composables/usePublicCategories'
+import { quickTiles } from '../data/siteData'
+
+const { productBlocks } = useProductCatalog()
+const { displayCategories } = usePublicCategories()
 </script>
 
 <template>
   <div>
-    <HomeShowcase :sidebar-categories="sidebarCategories" :quick-tiles="quickTiles" />
+    <HomeShowcase :category-items="displayCategories" :quick-tiles="quickTiles" />
     <ProductBlocks :blocks="productBlocks" />
   </div>
 </template>

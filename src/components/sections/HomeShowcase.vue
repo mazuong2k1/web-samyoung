@@ -7,8 +7,13 @@ type QuickTile = {
   imageUrl: string
 }
 
+export type ShowcaseCategoryItem = {
+  id: string
+  name: string
+}
+
 defineProps<{
-  sidebarCategories: string[]
+  categoryItems: ShowcaseCategoryItem[]
   quickTiles: QuickTile[]
 }>()
 
@@ -44,8 +49,8 @@ onBeforeUnmount(() => {
     <div class="container showcase-grid">
       <aside class="sidebar">
         <ul>
-          <li v-for="item in sidebarCategories" :key="item">
-            <a href="#">{{ item }}</a>
+          <li v-for="item in categoryItems" :key="item.id">
+            <a href="#">{{ item.name }}</a>
           </li>
         </ul>
       </aside>

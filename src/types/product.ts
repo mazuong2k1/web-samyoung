@@ -1,6 +1,8 @@
 export type ProductItem = {
+  id?: string
   name: string
   imageUrl: string
+  tags?: string[]
   tab?: string
   href?: string
 }
