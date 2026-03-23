@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 type ProductSpec = {
   label: string
@@ -32,9 +33,11 @@ const props = defineProps<{
   product: ProductDetail
 }>()
 
-const emit = defineEmits<{
-  (event: 'navigate', path: string): void
-}>()
+const router = useRouter()
+
+const goHome = () => {
+  void router.push({ name: 'home' })
+}
 
 const activeTab = ref<'detail' | 'comment'>('detail')
 const activeImage = ref(props.product.imageUrl)
@@ -56,7 +59,7 @@ const detailRows = computed(() => [
   <section class="product-detail-page">
     <div class="container">
       <nav class="detail-path">
-        <button type="button" @click="emit('navigate', '/')">Trang chủ</button>
+        <button type="button" @click="goHome">Trang chủ</button>
         <span class="sep">/</span>
         <span>Dụng Cụ Cắt CNC - SAMYOUNG</span>
         <span class="sep">/</span>

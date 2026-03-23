@@ -1,6 +1,13 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
+
+type MenuItem = {
+  label: string
+  path: string
+}
+
 defineProps<{
-  menuItems: string[]
+  menuItems: MenuItem[]
   logoUrl?: string
 }>()
 
@@ -36,7 +43,7 @@ const topPerks = [
 
   <header class="topbar">
     <div class="container topbar-inner">
-      <a href="#" class="logo-wrap" aria-label="Samyoung">
+      <RouterLink to="/" class="logo-wrap" aria-label="Samyoung">
         <img
           v-if="logoUrl"
           :src="logoUrl"
@@ -47,7 +54,7 @@ const topPerks = [
           <span class="logo-main">SAM</span>
           <span class="logo-text">YOUNG</span>
         </template>
-      </a>
+      </RouterLink>
 
       <div class="search-wrap">
         <select aria-label="Danh mục">
@@ -63,10 +70,16 @@ const topPerks = [
 
   <nav class="navbar">
     <div class="container nav-inner">
-      <a href="#" class="nav-link nav-link-featured">☰ DANH MỤC SẢN PHẨM</a>
-      <a v-for="item in menuItems" :key="item" href="#" class="nav-link">
-        {{ item }}
-      </a>
+      <RouterLink to="/" class="nav-link nav-link-featured">☰ DANH MỤC SẢN PHẨM</RouterLink>
+      <RouterLink
+        v-for="item in menuItems"
+        :key="item.path"
+        :to="item.path"
+        class="nav-link"
+        active-class="nav-link-active"
+      >
+        {{ item.label }}
+      </RouterLink>
     </div>
   </nav>
 </template>
