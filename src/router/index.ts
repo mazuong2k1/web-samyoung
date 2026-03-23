@@ -1,7 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import ProductDetailView from '../views/ProductDetailView.vue'
-import SimplePageView from '../views/SimplePageView.vue'
+import ContactView from '../views/ContactView.vue'
+import AboutView from '../views/AboutView.vue'
+import PartnersView from '../views/PartnersView.vue'
+import DocumentsView from '../views/DocumentsView.vue'
+import NewsView from '../views/NewsView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 
 const router = createRouter({
@@ -27,31 +31,31 @@ const router = createRouter({
     {
       path: '/ve-chung-toi',
       name: 'about',
-      component: SimplePageView,
+      component: AboutView,
       meta: { title: 'Về chúng tôi' },
     },
     {
       path: '/doi-tac',
       name: 'partners',
-      component: SimplePageView,
+      component: PartnersView,
       meta: { title: 'Đối tác' },
     },
     {
       path: '/tai-lieu',
       name: 'docs',
-      component: SimplePageView,
+      component: DocumentsView,
       meta: { title: 'Tài liệu' },
     },
     {
       path: '/tin-tuc',
       name: 'news',
-      component: SimplePageView,
+      component: NewsView,
       meta: { title: 'Tin tức' },
     },
     {
       path: '/lien-he',
       name: 'contact',
-      component: SimplePageView,
+      component: ContactView,
       meta: { title: 'Liên hệ' },
     },
     {

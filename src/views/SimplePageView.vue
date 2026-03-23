@@ -9,7 +9,7 @@ const title = computed(() => (route.meta.title as string) ?? 'Trang')
 <template>
   <section class="simple-page">
     <div class="container">
-      <h1 class="simple-page-title">{{ title }}</h1>
+      <h1 class="page-main-title">{{ title }}</h1>
       <p class="simple-page-text">Nội dung trang đang được cập nhật.</p>
     </div>
   </section>
