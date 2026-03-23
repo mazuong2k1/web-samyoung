@@ -1,12 +1,13 @@
 <script setup lang="ts">
-type HeaderMenuItem = {
+import { RouterLink } from 'vue-router'
+
+type MenuItem = {
   label: string
   path: string
 }
 
-const props = defineProps<{
-  menuItems: HeaderMenuItem[]
-  currentPath: string
+defineProps<{
+  menuItems: MenuItem[]
   logoUrl?: string
 }>()
 
@@ -57,7 +58,7 @@ const topPerks = [
 
   <header class="topbar">
     <div class="container topbar-inner">
-      <a href="/" class="logo-wrap" aria-label="Samyoung" @click.prevent="navigateTo('/')">
+      <RouterLink to="/" class="logo-wrap" aria-label="Samyoung">
         <img
           v-if="logoUrl"
           :src="logoUrl"
@@ -68,7 +69,7 @@ const topPerks = [
           <span class="logo-main">SAM</span>
           <span class="logo-text">YOUNG</span>
         </template>
-      </a>
+      </RouterLink>
 
       <div class="search-wrap">
         <select aria-label="Danh mục">
@@ -84,19 +85,16 @@ const topPerks = [
 
   <nav class="navbar">
     <div class="container nav-inner">
-      <a href="/" class="nav-link nav-link-featured" @click.prevent="navigateTo('/')">
-        ☰ DANH MỤC SẢN PHẨM
-      </a>
-      <a
+      <RouterLink to="/" class="nav-link nav-link-featured">☰ DANH MỤC SẢN PHẨM</RouterLink>
+      <RouterLink
         v-for="item in menuItems"
         :key="item.path"
-        :href="item.path"
+        :to="item.path"
         class="nav-link"
-        :class="{ 'nav-link-active': isActive(item.path) }"
-        @click.prevent="navigateTo(item.path)"
+        active-class="nav-link-active"
       >
         {{ item.label }}
-      </a>
+      </RouterLink>
     </div>
   </nav>
 </template>

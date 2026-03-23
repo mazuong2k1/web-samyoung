@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 
 type ProductItem = {
   name: string
@@ -18,9 +19,8 @@ type ProductBlock = {
 const props = defineProps<{
   blocks: ProductBlock[]
 }>()
-const emit = defineEmits<{
-  (event: 'navigate', path: string): void
-}>()
+
+const router = useRouter()
 
 const activeTabs = reactive<Record<string, string>>({})
 const sliderRefs = reactive<Record<string, HTMLElement | null>>({})
@@ -54,13 +54,18 @@ const toSlug = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
 
+/** Đường dẫn chuẩn: /san-pham/:slug (Vue Router) */
 const getDetailPath = (item: ProductItem) => {
-  if (item.href) return item.href
+  if (item.href) {
+    const h = item.href.replace(/^\//, '')
+    if (h.startsWith('san-pham/')) return `/${h}`
+    return `/san-pham/${h}`
+  }
   return `/san-pham/${toSlug(item.name)}`
 }
 
 const handleNavigate = (item: ProductItem) => {
-  emit('navigate', getDetailPath(item))
+  void router.push(getDetailPath(item))
 }
 
 const scrollSliderByCard = (title: string, direction: 'prev' | 'next') => {
