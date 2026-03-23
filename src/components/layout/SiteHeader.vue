@@ -11,21 +11,6 @@ const { menuItems, logoUrl } = defineProps<{
   logoUrl?: string
 }>()
 
-const emit = defineEmits<{
-  (event: 'navigate', path: string): void
-}>()
-
-const normalizePath = (path: string) => {
-  const cleaned = path.replace(/\/+$/, '')
-  return cleaned === '' ? '/' : cleaned
-}
-
-const isActive = (path: string) => normalizePath(props.currentPath) === normalizePath(path)
-
-const navigateTo = (path: string) => {
-  emit('navigate', path)
-}
-
 const topPerks = [
   {
     label: 'MIỄN PHÍ GIAO HÀNG',
