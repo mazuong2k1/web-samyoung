@@ -57,15 +57,17 @@ const onPageChange = (page: number) => {
           <td>{{ item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : '-' }}</td>
           <td>{{ item.updatedAt ? new Date(item.updatedAt).toLocaleString('vi-VN') : '-' }}</td>
           <td class="admin-actions">
-            <a-button size="small" @click="emit('edit', item.id)">Sửa</a-button>
-            <a-popconfirm
-              :title="`Xóa danh mục '${item.name}'?`"
-              ok-text="Xóa"
-              cancel-text="Hủy"
-              @confirm="emit('delete', item.id, item.name)"
-            >
-              <a-button size="small" danger>Xóa</a-button>
-            </a-popconfirm>
+            <div class="admin-actions-inner">
+              <a-button size="small" @click="emit('edit', item.id)">Sửa</a-button>
+              <a-popconfirm
+                :title="`Xóa danh mục '${item.name}'?`"
+                ok-text="Xóa"
+                cancel-text="Hủy"
+                @confirm="emit('delete', item.id, item.name)"
+              >
+                <a-button size="small" danger>Xóa</a-button>
+              </a-popconfirm>
+            </div>
           </td>
         </tr>
       </tbody>

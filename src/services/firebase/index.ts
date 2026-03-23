@@ -8,6 +8,8 @@ export type {
   FirebaseCreateResponse,
   FirebaseProductPayload,
   FirebaseProductRow,
+  FirebaseProductSpec,
+  FirebaseRelatedProduct,
   FirebaseRootData,
   FirebaseCategoriesResponse,
   FirebaseContactsResponse,
@@ -21,6 +23,7 @@ export {
   createFirebaseTestProduct,
   deleteFirebaseProduct,
   fetchFirebaseProducts,
+  mergeProductPayload,
   updateFirebaseProduct,
 } from './product'
 

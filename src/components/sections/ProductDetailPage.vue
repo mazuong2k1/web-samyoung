@@ -27,6 +27,12 @@ type ProductDetail = {
   features: string[]
   specs: ProductSpec[]
   related: RelatedProduct[]
+  tax?: string
+  unit?: string
+  warranty?: string
+  delivery?: string
+  receipt?: string
+  description?: string
 }
 
 const props = defineProps<{
@@ -36,15 +42,17 @@ const props = defineProps<{
 const activeTab = ref<'detail' | 'comment'>('detail')
 const activeImage = ref(props.product.imageUrl)
 const productImageList = computed(() => [props.product.imageUrl, ...props.product.gallery])
+const dash = (v?: string) => (v && v.trim() ? v : '-')
+
 const detailRows = computed(() => [
   { label: 'Mã sản phẩm', value: props.product.code },
   { label: 'Thương hiệu', value: props.product.brand },
   { label: 'Xuất xứ', value: props.product.origin },
-  { label: 'Thuế', value: '-' },
-  { label: 'Đơn vị', value: '-' },
-  { label: 'Bảo hành', value: '-' },
-  { label: 'Giao hàng', value: '-' },
-  { label: 'Nhận hàng', value: '-' },
+  { label: 'Thuế', value: dash(props.product.tax) },
+  { label: 'Đơn vị', value: dash(props.product.unit) },
+  { label: 'Bảo hành', value: dash(props.product.warranty) },
+  { label: 'Giao hàng', value: dash(props.product.delivery) },
+  { label: 'Nhận hàng', value: dash(props.product.receipt) },
   { label: 'Tình trạng', value: props.product.status },
 ])
 </script>
@@ -127,7 +135,13 @@ const detailRows = computed(() => [
 
         <div v-if="activeTab === 'detail'" class="detail-tabs-content">
           <h2>Thông Tin {{ product.name }}</h2>
-          <ul>
+          <div
+            v-if="product.description"
+            class="detail-description-text"
+          >
+            {{ product.description }}
+          </div>
+          <ul v-if="product.features.length">
             <li v-for="feature in product.features" :key="feature">{{ feature }}</li>
           </ul>
           <div class="spec-list">

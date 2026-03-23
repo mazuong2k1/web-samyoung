@@ -18,6 +18,18 @@ export type FirebaseCategoryPayload = {
   updatedAt?: string
 }
 
+/** Thông số kỹ thuật (lưới label / value) */
+export type FirebaseProductSpec = {
+  label: string
+  value: string
+}
+
+/** Sản phẩm gợi ý cuối trang chi tiết */
+export type FirebaseRelatedProduct = {
+  name: string
+  imageUrl: string
+}
+
 export type FirebaseProductPayload = {
   name: string
   imageUrl: string
@@ -28,6 +40,29 @@ export type FirebaseProductPayload = {
   blockTitle?: string
   createdAt?: string
   updatedAt?: string
+  /** Slug URL: /san-pham/:slug */
+  slug?: string
+  code?: string
+  /** Hiển thị khi không dùng "Liên hệ" */
+  price?: string
+  /** true = hiển thị "Liên hệ", false = dùng `price` */
+  priceIsContact?: boolean
+  views?: number
+  brand?: string
+  origin?: string
+  tax?: string
+  unit?: string
+  warranty?: string
+  delivery?: string
+  receipt?: string
+  stockStatus?: string
+  gallery?: string[]
+  description?: string
+  features?: string[]
+  specs?: FirebaseProductSpec[]
+  hotline?: string
+  supportHours?: string
+  related?: FirebaseRelatedProduct[]
 }
 
 export type FirebaseProductRow = FirebaseProductPayload & {

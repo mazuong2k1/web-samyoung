@@ -12,9 +12,11 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AButton: typeof import('ant-design-vue/es')['Button']
+    ACheckbox: typeof import('ant-design-vue/es')['Checkbox']
     AForm: typeof import('ant-design-vue/es')['Form']
     AFormItem: typeof import('ant-design-vue/es')['FormItem']
     AInput: typeof import('ant-design-vue/es')['Input']
+    AInputNumber: typeof import('ant-design-vue/es')['InputNumber']
     AInputPassword: typeof import('ant-design-vue/es')['InputPassword']
     AModal: typeof import('ant-design-vue/es')['Modal']
     APagination: typeof import('ant-design-vue/es')['Pagination']
@@ -24,6 +26,7 @@ declare module 'vue' {
     ATabPane: typeof import('ant-design-vue/es')['TabPane']
     ATabs: typeof import('ant-design-vue/es')['Tabs']
     ATextarea: typeof import('ant-design-vue/es')['Textarea']
+    AUpload: typeof import('ant-design-vue/es')['Upload']
     BestSellingSidebar: typeof import('./src/components/sections/BestSellingSidebar.vue')['default']
     CategorySection: typeof import('./src/components/sections/CategorySection.vue')['default']
     DocumentList: typeof import('./src/components/sections/DocumentList.vue')['default']

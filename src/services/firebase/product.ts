@@ -1,9 +1,12 @@
+import { toSlug } from '../../data/siteData'
 import { RTDB_BASE_URL } from './config'
 import type {
   FirebaseCreateResponse,
   FirebaseProductPayload,
   FirebaseProductRow,
+  FirebaseProductSpec,
   FirebaseProductsResponse,
+  FirebaseRelatedProduct,
 } from './types'
 
 export const fetchFirebaseProducts = async () => {
@@ -21,24 +24,63 @@ export const fetchFirebaseProducts = async () => {
   }))
 }
 
-export const createFirebaseProduct = async (payload?: Partial<FirebaseProductPayload>) => {
+/** Gộp payload đầy đủ khi POST (dùng lại từ admin nếu cần đồng bộ state). */
+export function mergeProductPayload(payload?: Partial<FirebaseProductPayload>): FirebaseProductPayload {
+  const p = payload ?? {}
   const now = new Date().toISOString()
+  const name = p.name?.trim() || 'Sản phẩm'
+  const slugRaw = p.slug?.trim()
+  const codeRaw = p.code?.trim()
+  const slug = slugRaw || toSlug(codeRaw || name)
+  const href =
+    p.href?.trim() ||
+    (slug ? `san-pham/${slug}` : '')
+
+  return {
+    name,
+    imageUrl: p.imageUrl?.trim() || '/banner/product.jpeg',
+    tags: Array.isArray(p.tags) ? p.tags : [],
+    note: p.note ?? '',
+    tab: p.tab ?? '',
+    href,
+    blockTitle: p.blockTitle ?? '',
+    slug,
+    code: codeRaw ?? '',
+    price: p.price?.trim() ?? 'Liên hệ',
+    priceIsContact: p.priceIsContact !== false,
+    views: typeof p.views === 'number' && !Number.isNaN(p.views) ? p.views : Number(p.views) || 0,
+    brand: p.brand?.trim() || 'SAMYOUNG',
+    origin: p.origin?.trim() || 'Việt Nam',
+    tax: p.tax?.trim() ?? '',
+    unit: p.unit?.trim() ?? '',
+    warranty: p.warranty?.trim() ?? '',
+    delivery: p.delivery?.trim() ?? '',
+    receipt: p.receipt?.trim() ?? '',
+    stockStatus: p.stockStatus?.trim() || 'Còn hàng',
+    gallery: Array.isArray(p.gallery) ? p.gallery.filter(Boolean) : [],
+    description: p.description ?? '',
+    features: Array.isArray(p.features) ? p.features.filter(Boolean) : [],
+    specs: Array.isArray(p.specs)
+      ? (p.specs as FirebaseProductSpec[]).filter((s) => s.label?.trim() || s.value?.trim())
+      : [],
+    hotline: p.hotline?.trim() || '0982 047 123',
+    supportHours: p.supportHours?.trim() ?? '',
+    related: Array.isArray(p.related)
+      ? (p.related as FirebaseRelatedProduct[]).filter((r) => r.name?.trim())
+      : [],
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export const createFirebaseProduct = async (payload?: Partial<FirebaseProductPayload>) => {
+  const merged = mergeProductPayload(payload)
   const response = await fetch(`${RTDB_BASE_URL}/product.json`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      name: payload?.name ?? 'Test Product',
-      imageUrl: payload?.imageUrl ?? '/banner/product.jpeg',
-      tags: payload?.tags ?? [],
-      note: payload?.note ?? 'Created from admin test',
-      tab: payload?.tab ?? '',
-      href: payload?.href ?? '',
-      blockTitle: payload?.blockTitle ?? '',
-      createdAt: now,
-      updatedAt: now,
-    }),
+    body: JSON.stringify(merged),
   })
 
   if (!response.ok) {
@@ -46,7 +88,11 @@ export const createFirebaseProduct = async (payload?: Partial<FirebaseProductPay
   }
 
   const data = (await response.json()) as FirebaseCreateResponse
-  return { ...data, createdAt: now, updatedAt: now }
+  return {
+    ...data,
+    createdAt: merged.createdAt,
+    updatedAt: merged.updatedAt,
+  }
 }
 
 export const updateFirebaseProduct = async (id: string, payload: Partial<FirebaseProductPayload>) => {

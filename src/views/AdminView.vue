@@ -7,8 +7,9 @@ import AdminCategoriesSection from '../admin/components/AdminCategoriesSection.v
 import AdminContactsSection from '../admin/components/AdminContactsSection.vue'
 import AdminProductsSection from '../admin/components/AdminProductsSection.vue'
 import AdminTabsNav from '../admin/components/AdminTabsNav.vue'
-import { productBlocks } from '../data/siteData'
+import { productBlocks, toSlug } from '../data/siteData'
 import { sortByCreatedAtDesc } from '../utils/sortByTime'
+import { formatVndFromDigitsString, normalizeStoredPriceForInput } from '../utils/vndPriceInput'
 import {
   createFirebaseCategory,
   createFirebaseProduct,
@@ -23,6 +24,7 @@ import {
   updateFirebaseProduct,
   type FirebaseContactRow,
   type FirebaseProductRow,
+  type FirebaseProductSpec,
 } from '../services/firebaseApi'
 
 const router = useRouter()
@@ -60,6 +62,8 @@ const editingCategoryId = ref('')
 const categoryName = ref('')
 const categoryError = ref('')
 
+const specRows = ref<FirebaseProductSpec[]>([{ label: '', value: '' }])
+
 const form = reactive({
   blockTitle: '',
   name: '',
@@ -67,6 +71,25 @@ const form = reactive({
   tags: [] as number[],
   tab: '',
   href: '',
+  slug: '',
+  code: '',
+  price: 'Liên hệ',
+  priceIsContact: true,
+  views: 0,
+  brand: 'SAMYOUNG',
+  origin: 'Việt Nam',
+  tax: '',
+  unit: '',
+  warranty: '',
+  delivery: '',
+  receipt: '',
+  stockStatus: 'Còn hàng',
+  galleryText: '',
+  description: '',
+  featuresText: '',
+  hotline: '0982 047 123',
+  supportHours: '8h - 21h (T2-T7), Chủ Nhật đến 17h',
+  note: '',
 })
 const tagOptions = [
   { label: 'NEW', value: 1 },
@@ -164,6 +187,9 @@ const loadCategories = async () => {
   }
 }
 
+const listToLines = (arr: string[] | undefined) => (arr?.length ? arr.join('\n') : '')
+const linesToList = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean)
+
 const resetForm = () => {
   form.blockTitle = blockTitles.value[0] ?? ''
   form.name = ''
@@ -171,7 +197,94 @@ const resetForm = () => {
   form.tags = []
   form.tab = ''
   form.href = ''
+  form.slug = ''
+  form.code = ''
+  form.price = 'Liên hệ'
+  form.priceIsContact = true
+  form.views = 0
+  form.brand = 'SAMYOUNG'
+  form.origin = 'Việt Nam'
+  form.tax = ''
+  form.unit = ''
+  form.warranty = ''
+  form.delivery = ''
+  form.receipt = ''
+  form.stockStatus = 'Còn hàng'
+  form.galleryText = ''
+  form.description = ''
+  form.featuresText = ''
+  form.hotline = '0982 047 123'
+  form.supportHours = '8h - 21h (T2-T7), Chủ Nhật đến 17h'
+  form.note = ''
+  specRows.value = [{ label: '', value: '' }]
   formError.value = ''
+}
+
+const addSpecRow = () => {
+  specRows.value.push({ label: '', value: '' })
+}
+const removeSpecRow = (index: number) => {
+  specRows.value.splice(index, 1)
+  if (specRows.value.length === 0) specRows.value.push({ label: '', value: '' })
+}
+
+/** Chỉ số + format 1.234.567 đ khi gõ */
+const onVndPriceInput = (val: string) => {
+  form.price = formatVndFromDigitsString(val)
+}
+
+const onPriceContactModeChange = (checked: boolean) => {
+  form.priceIsContact = checked
+  form.price = checked ? 'Liên hệ' : ''
+}
+
+/** Hotline: chỉ cho nhập số và khoảng trắng */
+const onHotlineInput = (val: string) => {
+  form.hotline = val.replace(/[^\d\s]/g, '').replace(/\s{2,}/g, ' ').trimStart()
+}
+
+const collectMissingRequiredFields = () => {
+  const missing: string[] = []
+  if (!form.blockTitle.trim()) missing.push('Nhóm sản phẩm')
+  if (!form.code.trim()) missing.push('Mã sản phẩm')
+  if (!form.name.trim()) missing.push('Tên sản phẩm')
+  if (!form.imageUrl.trim()) missing.push('Ảnh chính')
+  if (!form.brand.trim()) missing.push('Thương hiệu')
+  if (!form.origin.trim()) missing.push('Xuất xứ')
+  if (!form.stockStatus.trim()) missing.push('Tình trạng kho')
+  if (!form.hotline.trim()) missing.push('Hotline')
+  if (!form.priceIsContact && !form.price.trim()) missing.push('Giá hiển thị')
+  return missing
+}
+
+const fileToDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result ?? ''))
+    reader.onerror = () => reject(new Error('Không đọc được file ảnh.'))
+    reader.readAsDataURL(file)
+  })
+
+const onMainImageSelect = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    formError.value = 'Vui lòng chọn file ảnh hợp lệ.'
+    return
+  }
+  try {
+    const dataUrl = await fileToDataUrl(file)
+    if (dataUrl) {
+      form.imageUrl = dataUrl
+      formError.value = ''
+    }
+  } catch {
+    formError.value = 'Không thể tải ảnh lên.'
+  } finally {
+    // Cho phép chọn lại cùng 1 file.
+    input.value = ''
+  }
 }
 
 const toTags = (values: number[]) =>
@@ -210,67 +323,84 @@ const openEdit = (id: string) => {
   form.tags = normalizeTagIds(item.tags)
   form.tab = item.tab ?? ''
   form.href = item.href ?? ''
+  form.slug = item.slug ?? ''
+  form.code = item.code ?? ''
+  form.priceIsContact = item.priceIsContact !== false
+  form.price =
+    item.priceIsContact === false
+      ? normalizeStoredPriceForInput(item.price ?? '')
+      : (item.price ?? 'Liên hệ')
+  form.views = typeof item.views === 'number' ? item.views : Number(item.views) || 0
+  form.brand = item.brand ?? 'SAMYOUNG'
+  form.origin = item.origin ?? 'Việt Nam'
+  form.tax = item.tax ?? ''
+  form.unit = item.unit ?? ''
+  form.warranty = item.warranty ?? ''
+  form.delivery = item.delivery ?? ''
+  form.receipt = item.receipt ?? ''
+  form.stockStatus = item.stockStatus ?? 'Còn hàng'
+  form.galleryText = listToLines(item.gallery)
+  form.description = item.description ?? ''
+  form.featuresText = listToLines(item.features)
+  form.hotline = item.hotline ?? '0982 047 123'
+  form.supportHours = item.supportHours ?? '8h - 21h (T2-T7), Chủ Nhật đến 17h'
+  form.note = item.note ?? ''
+  specRows.value =
+    item.specs && item.specs.length > 0 ? [...item.specs] : [{ label: '', value: '' }]
   formError.value = ''
   openModal.value = true
 }
 
 const submit = async () => {
-  if (!form.blockTitle.trim() || !form.name.trim() || !form.imageUrl.trim()) {
-    formError.value = 'Vui lòng nhập nhóm, tên sản phẩm và ảnh.'
+  const missingFields = collectMissingRequiredFields()
+  if (missingFields.length > 0) {
+    formError.value = `Thiếu thông tin bắt buộc: ${missingFields.join(', ')}.`
     return
+  }
+
+  const slug = form.slug.trim() || toSlug(form.code.trim() || form.name.trim())
+  const href = form.href.trim() || `san-pham/${slug}`
+  const specs = specRows.value.filter((r) => r.label.trim() || r.value.trim())
+
+  const payload = {
+    blockTitle: form.blockTitle.trim(),
+    name: form.name.trim(),
+    imageUrl: form.imageUrl.trim(),
+    tags: toTags(form.tags),
+    tab: form.tab.trim(),
+    href,
+    slug,
+    code: form.code.trim(),
+    price: form.priceIsContact ? 'Liên hệ' : form.price.trim(),
+    priceIsContact: form.priceIsContact,
+    views: Number(form.views) || 0,
+    brand: form.brand.trim(),
+    origin: form.origin.trim(),
+    tax: form.tax.trim(),
+    unit: form.unit.trim(),
+    warranty: form.warranty.trim(),
+    delivery: form.delivery.trim(),
+    receipt: form.receipt.trim(),
+    stockStatus: form.stockStatus.trim(),
+    gallery: linesToList(form.galleryText),
+    description: form.description.trim(),
+    features: linesToList(form.featuresText),
+    specs,
+    hotline: form.hotline.trim(),
+    supportHours: form.supportHours.trim(),
+    note: form.note.trim(),
   }
 
   savingProduct.value = true
   try {
     if (isEdit.value && editingId.value) {
-      await updateFirebaseProduct(editingId.value, {
-        name: form.name.trim(),
-        imageUrl: form.imageUrl.trim(),
-        tags: toTags(form.tags),
-        tab: form.tab.trim(),
-        href: form.href.trim(),
-        blockTitle: form.blockTitle.trim(),
-      })
-      const idx = rows.value.findIndex((item) => item.id === editingId.value)
-      if (idx >= 0) {
-        const now = new Date().toISOString()
-        rows.value[idx] = {
-          ...rows.value[idx],
-          name: form.name.trim(),
-          imageUrl: form.imageUrl.trim(),
-          tags: toTags(form.tags),
-          tab: form.tab.trim() || '',
-          href: form.href.trim() || '',
-          blockTitle: form.blockTitle.trim(),
-          updatedAt: now,
-        }
-      }
+      await updateFirebaseProduct(editingId.value, payload)
       void message.success('Đã cập nhật sản phẩm.')
     } else {
-      const created = await createFirebaseProduct({
-        name: form.name.trim(),
-        imageUrl: form.imageUrl.trim(),
-        tags: toTags(form.tags),
-        tab: form.tab.trim(),
-        href: form.href.trim(), 
-        blockTitle: form.blockTitle.trim(),
-        note: 'Created from admin modal',
-      })
-      rows.value.unshift({
-        id: created.name,
-        name: form.name.trim(),
-        imageUrl: form.imageUrl.trim(),
-        tags: toTags(form.tags),
-        tab: form.tab.trim() || '',
-        href: form.href.trim() || '',
-        blockTitle: form.blockTitle.trim(),
-        note: 'Created from admin modal',
-        createdAt: created.createdAt,
-        updatedAt: created.updatedAt,
-      })
+      await createFirebaseProduct(payload)
       void message.success(`Đã thêm sản phẩm ${form.name}`)
     }
-
+    await loadProducts()
     openModal.value = false
   } catch (error) {
     const text = error instanceof Error ? error.message : 'Lỗi không xác định'
@@ -500,31 +630,159 @@ onMounted(() => {
       v-model:open="openModal"
       :title="isEdit ? 'Sửa sản phẩm' : 'Thêm sản phẩm'"
       :confirm-loading="savingProduct"
+      width="min(92vw, 920px)"
+      :body-style="{ maxHeight: 'min(78vh, 720px)', overflowY: 'auto', paddingTop: '8px' }"
       @ok="submit"
     >
-      <a-form layout="vertical" class="admin-form">
-        <a-form-item label="Nhóm sản phẩm">
-          <a-select v-model:value="form.blockTitle" :options="blockTitles.map((title) => ({ label: title, value: title }))" />
-        </a-form-item>
-        <a-form-item label="Tên sản phẩm">
+      <a-form layout="vertical" class="admin-form admin-product-form">
+        <p class="admin-form-section-title">Phân loại & đường dẫn</p>
+        <div class="admin-product-form-grid">
+          <a-form-item label="Nhóm sản phẩm (danh mục) *">
+            <a-select
+              v-model:value="form.blockTitle"
+              :options="blockTitles.map((title) => ({ label: title, value: title }))"
+            />
+          </a-form-item>
+          <a-form-item label="Slug URL (để trống sẽ tự tạo từ mã/tên)">
+            <a-input v-model:value="form.slug" placeholder="vd: mam-cap-co-3-chau" />
+          </a-form-item>
+        </div>
+        <div class="admin-product-form-grid">
+          <a-form-item label="Mã sản phẩm *">
+            <a-input v-model:value="form.code" placeholder="VD: MAM-CAP-CO-3-CHAU" />
+          </a-form-item>
+          <a-form-item label="Href (tùy chọn, mặc định san-pham/slug)">
+            <a-input v-model:value="form.href" placeholder="san-pham/ten-san-pham" />
+          </a-form-item>
+        </div>
+
+        <p class="admin-form-section-title">Thông tin hiển thị</p>
+        <a-form-item label="Tên sản phẩm *">
           <a-input v-model:value="form.name" />
         </a-form-item>
-        <a-form-item label="Ảnh (URL)">
-          <a-input v-model:value="form.imageUrl" />
+        <div class="admin-product-form-grid">
+          <a-form-item label="Ảnh chính (upload file) *">
+            <input
+              type="file"
+              accept="image/*"
+              class="admin-file-input"
+              @change="onMainImageSelect"
+            />
+            <div v-if="form.imageUrl" class="admin-image-preview">
+              <img :src="form.imageUrl" alt="Preview" class="admin-image-preview-img" />
+            </div>
+          </a-form-item>
+          <a-form-item label="Tag">
+            <a-select
+              v-model:value="form.tags"
+              mode="multiple"
+              :options="tagOptions"
+              placeholder="Chọn tag"
+            />
+          </a-form-item>
+        </div>
+        <div class="admin-product-form-grid">
+          <a-form-item label="Tab (nhóm con trong block)">
+            <a-input v-model:value="form.tab" />
+          </a-form-item>
+          <a-form-item label="Lượt xem (số)">
+            <a-input-number v-model:value="form.views" :min="0" style="width: 100%" />
+          </a-form-item>
+        </div>
+
+        <p class="admin-form-section-title">Giá & tồn</p>
+        <a-form-item>
+          <a-checkbox
+            :checked="form.priceIsContact"
+            @update:checked="onPriceContactModeChange"
+          >
+            Hiển thị &quot;Liên hệ&quot; thay vì nhập giá
+          </a-checkbox>
         </a-form-item>
-        <a-form-item label="Tag">
-          <a-select
-            v-model:value="form.tags"
-            mode="multiple"
-            :options="tagOptions"
-            placeholder="Chọn tag (gửi dạng number)"
+        <a-form-item v-if="!form.priceIsContact" label="Giá hiển thị">
+          <a-input
+            :value="form.price"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="VD: 1.200.000 đ"
+            @update:value="onVndPriceInput"
           />
         </a-form-item>
-        <a-form-item label="Tab (tùy chọn)">
-          <a-input v-model:value="form.tab" />
+        <a-form-item label="Tình trạng kho / hiển thị *">
+          <a-input v-model:value="form.stockStatus" placeholder="Còn hàng" />
         </a-form-item>
-        <a-form-item label="Href (tùy chọn)">
-          <a-input v-model:value="form.href" placeholder="/mui-vat-mep-centering-2cen hoặc san-pham/slug" />
+
+        <p class="admin-form-section-title">Thuộc tính</p>
+        <div class="admin-product-form-grid">
+          <a-form-item label="Thương hiệu *">
+            <a-input v-model:value="form.brand" />
+          </a-form-item>
+          <a-form-item label="Xuất xứ *">
+            <a-input v-model:value="form.origin" />
+          </a-form-item>
+        </div>
+        <div class="admin-product-form-grid">
+          <a-form-item label="Thuế">
+            <a-input v-model:value="form.tax" />
+          </a-form-item>
+          <a-form-item label="Đơn vị">
+            <a-input v-model:value="form.unit" />
+          </a-form-item>
+        </div>
+        <div class="admin-product-form-grid">
+          <a-form-item label="Bảo hành">
+            <a-input v-model:value="form.warranty" />
+          </a-form-item>
+          <a-form-item label="Giao hàng">
+            <a-input v-model:value="form.delivery" />
+          </a-form-item>
+        </div>
+        <a-form-item label="Nhận hàng">
+          <a-input v-model:value="form.receipt" />
+        </a-form-item>
+
+        <p class="admin-form-section-title">Media</p>
+        <a-form-item label="Ảnh gallery (mỗi dòng một URL)">
+          <a-textarea v-model:value="form.galleryText" :rows="4" placeholder="URL 1&#10;URL 2" />
+        </a-form-item>
+
+        <p class="admin-form-section-title">Nội dung chi tiết</p>
+        <a-form-item label="Mô tả / đoạn giới thiệu">
+          <a-textarea v-model:value="form.description" :rows="4" placeholder="Hiển thị phần mô tả phía trên bullet..." />
+        </a-form-item>
+        <a-form-item label="Điểm nổi bật (mỗi dòng một gạch đầu dòng)">
+          <a-textarea v-model:value="form.featuresText" :rows="5" />
+        </a-form-item>
+
+        <p class="admin-form-section-title">Thông số kỹ thuật</p>
+        <div
+          v-for="(row, idx) in specRows"
+          :key="`spec-${idx}`"
+          class="admin-spec-row"
+        >
+          <a-input v-model:value="row.label" placeholder="Tên thông số" />
+          <a-input v-model:value="row.value" placeholder="Giá trị" />
+          <a-button type="text" danger @click="removeSpecRow(idx)">Xóa</a-button>
+        </div>
+        <a-button type="dashed" block class="admin-add-row-btn" @click="addSpecRow">+ Thêm thông số</a-button>
+
+        <p class="admin-form-section-title">Liên hệ & ghi chú</p>
+        <div class="admin-product-form-grid">
+          <a-form-item label="Hotline *">
+            <a-input
+              :value="form.hotline"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="VD: 0982 047 123"
+              @update:value="onHotlineInput"
+            />
+          </a-form-item>
+          <a-form-item label="Giờ hỗ trợ">
+            <a-input v-model:value="form.supportHours" />
+          </a-form-item>
+        </div>
+        <a-form-item label="Ghi chú nội bộ (note)">
+          <a-input v-model:value="form.note" />
         </a-form-item>
       </a-form>
       <p v-if="formError" class="admin-form-error">{{ formError }}</p>

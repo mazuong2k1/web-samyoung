@@ -40,4 +40,10 @@ export type ProductDetail = {
   features: string[]
   specs: ProductSpec[]
   related: RelatedProduct[]
+  tax?: string
+  unit?: string
+  warranty?: string
+  delivery?: string
+  receipt?: string
+  description?: string
 }

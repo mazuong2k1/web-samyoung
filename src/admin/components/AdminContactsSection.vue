@@ -60,14 +60,16 @@ const onPageChange = (page: number) => {
           <td>{{ contact.createdAt ? new Date(contact.createdAt).toLocaleString('vi-VN') : '-' }}</td>
           <td>{{ contact.updatedAt ? new Date(contact.updatedAt).toLocaleString('vi-VN') : '-' }}</td>
           <td class="admin-actions">
-            <a-popconfirm
-              :title="`Xóa liên hệ của '${contact.fullName}'?`"
-              ok-text="Xóa"
-              cancel-text="Hủy"
-              @confirm="emit('delete', contact.id, contact.fullName)"
-            >
-              <a-button size="small" danger>Xóa</a-button>
-            </a-popconfirm>
+            <div class="admin-actions-inner">
+              <a-popconfirm
+                :title="`Xóa liên hệ của '${contact.fullName}'?`"
+                ok-text="Xóa"
+                cancel-text="Hủy"
+                @confirm="emit('delete', contact.id, contact.fullName)"
+              >
+                <a-button size="small" danger>Xóa</a-button>
+              </a-popconfirm>
+            </div>
           </td>
         </tr>
       </tbody>
