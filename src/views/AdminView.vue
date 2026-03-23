@@ -63,6 +63,7 @@ const categoryName = ref('')
 const categoryError = ref('')
 
 const specRows = ref<FirebaseProductSpec[]>([{ label: '', value: '' }])
+const galleryUploads = ref<string[]>([])
 
 const form = reactive({
   blockTitle: '',
@@ -84,7 +85,6 @@ const form = reactive({
   delivery: '',
   receipt: '',
   stockStatus: 'Còn hàng',
-  galleryText: '',
   description: '',
   featuresText: '',
   hotline: '0982 047 123',
@@ -210,12 +210,12 @@ const resetForm = () => {
   form.delivery = ''
   form.receipt = ''
   form.stockStatus = 'Còn hàng'
-  form.galleryText = ''
   form.description = ''
   form.featuresText = ''
   form.hotline = '0982 047 123'
   form.supportHours = '8h - 21h (T2-T7), Chủ Nhật đến 17h'
   form.note = ''
+  galleryUploads.value = []
   specRows.value = [{ label: '', value: '' }]
   formError.value = ''
 }
@@ -287,6 +287,39 @@ const onMainImageSelect = async (event: Event) => {
   }
 }
 
+const onGalleryImagesSelect = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const files = Array.from(input.files ?? [])
+  if (files.length === 0) return
+
+  const imageFiles = files.filter((f) => f.type.startsWith('image/'))
+  if (imageFiles.length !== files.length) {
+    formError.value = 'Một số file không phải ảnh và đã bị bỏ qua.'
+  }
+
+  const available = Math.max(0, 5 - galleryUploads.value.length)
+  const picked = imageFiles.slice(0, available)
+  if (imageFiles.length > available) {
+    formError.value = 'Tối đa 5 ảnh phụ.'
+  }
+
+  try {
+    const uploaded = await Promise.all(picked.map((f) => fileToDataUrl(f)))
+    galleryUploads.value.push(...uploaded.filter(Boolean))
+    if (uploaded.length > 0 && formError.value === 'Không thể tải ảnh lên.') {
+      formError.value = ''
+    }
+  } catch {
+    formError.value = 'Không thể tải ảnh phụ lên.'
+  } finally {
+    input.value = ''
+  }
+}
+
+const removeGalleryImage = (index: number) => {
+  galleryUploads.value.splice(index, 1)
+}
+
 const toTags = (values: number[]) =>
   values
     .map((tag) => Number(tag))
@@ -339,7 +372,7 @@ const openEdit = (id: string) => {
   form.delivery = item.delivery ?? ''
   form.receipt = item.receipt ?? ''
   form.stockStatus = item.stockStatus ?? 'Còn hàng'
-  form.galleryText = listToLines(item.gallery)
+  galleryUploads.value = item.gallery?.slice(0, 5) ?? []
   form.description = item.description ?? ''
   form.featuresText = listToLines(item.features)
   form.hotline = item.hotline ?? '0982 047 123'
@@ -382,7 +415,7 @@ const submit = async () => {
     delivery: form.delivery.trim(),
     receipt: form.receipt.trim(),
     stockStatus: form.stockStatus.trim(),
-    gallery: linesToList(form.galleryText),
+    gallery: [...galleryUploads.value],
     description: form.description.trim(),
     features: linesToList(form.featuresText),
     specs,
@@ -629,6 +662,8 @@ onMounted(() => {
     <a-modal
       v-model:open="openModal"
       :title="isEdit ? 'Sửa sản phẩm' : 'Thêm sản phẩm'"
+      ok-text="Xác nhận"
+      cancel-text="Hủy bỏ"
       :confirm-loading="savingProduct"
       width="min(92vw, 920px)"
       :body-style="{ maxHeight: 'min(78vh, 720px)', overflowY: 'auto', paddingTop: '8px' }"
@@ -742,8 +777,26 @@ onMounted(() => {
         </a-form-item>
 
         <p class="admin-form-section-title">Media</p>
-        <a-form-item label="Ảnh gallery (mỗi dòng một URL)">
-          <a-textarea v-model:value="form.galleryText" :rows="4" placeholder="URL 1&#10;URL 2" />
+        <a-form-item label="Ảnh phụ (tối đa 5 ảnh)">
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            class="admin-file-input"
+            @change="onGalleryImagesSelect"
+          />
+          <div v-if="galleryUploads.length" class="admin-gallery-preview">
+            <div
+              v-for="(img, idx) in galleryUploads"
+              :key="`${img}-${idx}`"
+              class="admin-gallery-item"
+            >
+              <img :src="img" :alt="`Gallery ${idx + 1}`" class="admin-gallery-img" />
+              <button type="button" class="admin-gallery-remove" @click="removeGalleryImage(idx)">
+                X
+              </button>
+            </div>
+          </div>
         </a-form-item>
 
         <p class="admin-form-section-title">Nội dung chi tiết</p>
@@ -791,6 +844,8 @@ onMounted(() => {
     <a-modal
       v-model:open="openCategoryModal"
       :title="isEditCategory ? 'Sửa danh mục' : 'Thêm danh mục'"
+      ok-text="Xác nhận"
+      cancel-text="Hủy bỏ"
       :confirm-loading="savingCategory"
       @ok="submitCategory"
     >

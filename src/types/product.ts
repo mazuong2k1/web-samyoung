@@ -2,6 +2,9 @@ export type ProductItem = {
   id?: string
   name: string
   imageUrl: string
+  price?: string
+  soldCount?: number
+  rating?: number
   tags?: string[]
   tab?: string
   href?: string

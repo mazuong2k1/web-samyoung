@@ -64,10 +64,13 @@ const onPageChange = (page: number) => {
               <a-popconfirm
                 :title="`Xóa liên hệ của '${contact.fullName}'?`"
                 ok-text="Xóa"
-                cancel-text="Hủy"
+                cancel-text="Hủy bỏ"
                 @confirm="emit('delete', contact.id, contact.fullName)"
               >
-                <a-button size="small" danger>Xóa</a-button>
+                <a-button size="small" danger class="admin-action-btn admin-action-btn--delete">
+                  <span aria-hidden="true">🗑️</span>
+                  <span>Xóa</span>
+                </a-button>
               </a-popconfirm>
             </div>
           </td>

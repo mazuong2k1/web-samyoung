@@ -30,6 +30,13 @@ export type FirebaseRelatedProduct = {
   imageUrl: string
 }
 
+export type FirebaseProductReview = {
+  fullName: string
+  stars: number
+  content: string
+  createdAt: string
+}
+
 export type FirebaseProductPayload = {
   name: string
   imageUrl: string
@@ -47,6 +54,12 @@ export type FirebaseProductPayload = {
   price?: string
   /** true = hiển thị "Liên hệ", false = dùng `price` */
   priceIsContact?: boolean
+  /** Số lượt mua hiển thị ở card/list */
+  soldCount?: number
+  /** Điểm đánh giá trung bình (0-5) */
+  rating?: number
+  /** Tổng số lượt đã đánh giá */
+  ratingCount?: number
   views?: number
   brand?: string
   origin?: string
@@ -63,6 +76,7 @@ export type FirebaseProductPayload = {
   hotline?: string
   supportHours?: string
   related?: FirebaseRelatedProduct[]
+  reviews?: FirebaseProductReview[]
 }
 
 export type FirebaseProductRow = FirebaseProductPayload & {

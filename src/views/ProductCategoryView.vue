@@ -1,0 +1,100 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import AppBreadcrumbs from '../components/layout/AppBreadcrumbs.vue'
+import ProductBlocks from '../components/sections/ProductBlocks.vue'
+import { useProductCatalog } from '../composables/useProductCatalog'
+import { toSlug } from '../data/siteData'
+import type { ProductItem } from '../types/product'
+
+const route = useRoute()
+const { productBlocks } = useProductCatalog()
+
+const categorySlug = computed(() => (route.params.slug as string) ?? '')
+const searchQuery = computed(() => {
+  const q = route.query.q
+  return typeof q === 'string' ? q.trim() : ''
+})
+const categoryLabel = computed(() => {
+  const fromQuery = route.query.label
+  if (typeof fromQuery === 'string' && fromQuery.trim()) return fromQuery.trim()
+  return categorySlug.value.replace(/-/g, ' ').toUpperCase()
+})
+
+const getDetailPath = (item: ProductItem) => {
+  if (item.href) {
+    const h = item.href.replace(/^\//, '')
+    if (h.startsWith('san-pham/')) return `/${h}`
+    return `/san-pham/${h}`
+  }
+  return `/san-pham/${toSlug(item.name)}`
+}
+
+const categoryMatchedItems = computed(() => {
+  const slug = categorySlug.value
+  if (!slug) return [] as ProductItem[]
+  if (slug === 'tat-ca') {
+    return productBlocks.value.flatMap((block) =>
+      block.items.map((item) => ({
+        ...item,
+        href: getDetailPath(item),
+      })),
+    )
+  }
+
+  return productBlocks.value.flatMap((block) =>
+    block.items
+      .filter((item) => {
+        const inTitle = toSlug(block.title).includes(slug)
+        const inTab = toSlug(item.tab ?? '').includes(slug)
+        const inName = toSlug(item.name).includes(slug)
+        return inTitle || inTab || inName
+      })
+      .map((item) => ({
+        ...item,
+        href: getDetailPath(item),
+      })),
+  )
+})
+
+const filteredItems = computed(() => {
+  const q = toSlug(searchQuery.value)
+  if (!q) return categoryMatchedItems.value
+  return categoryMatchedItems.value.filter((item) => {
+    const inName = toSlug(item.name).includes(q)
+    const inTab = toSlug(item.tab ?? '').includes(q)
+    const inHref = toSlug(item.href ?? '').includes(q)
+    return inName || inTab || inHref
+  })
+})
+
+const categoryBlock = computed(() => [
+  {
+    title: searchQuery.value
+      ? `KẾT QUẢ TÌM KIẾM: "${searchQuery.value}"`
+      : `DANH MỤC: ${categoryLabel.value}`,
+    items: filteredItems.value,
+  },
+])
+</script>
+
+<template>
+  <section class="simple-page">
+    <div class="container">
+      <AppBreadcrumbs
+        :items="[
+          { label: 'Trang chủ', to: '/' },
+          { label: 'Danh mục sản phẩm' },
+          { label: categoryLabel },
+        ]"
+      />
+
+      <h1 class="page-main-title">Sản phẩm: {{ categoryLabel }}</h1>
+
+      <ProductBlocks v-if="filteredItems.length > 0" :blocks="categoryBlock" />
+      <div v-else class="category-empty">
+        Chưa có sản phẩm cho danh mục này.
+      </div>
+    </div>
+  </section>
+</template>

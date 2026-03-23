@@ -6,6 +6,7 @@ import type {
   FirebaseProductRow,
   FirebaseProductSpec,
   FirebaseProductsResponse,
+  FirebaseProductReview,
   FirebaseRelatedProduct,
 } from './types'
 
@@ -48,6 +49,14 @@ export function mergeProductPayload(payload?: Partial<FirebaseProductPayload>): 
     code: codeRaw ?? '',
     price: p.price?.trim() ?? 'Liên hệ',
     priceIsContact: p.priceIsContact !== false,
+    soldCount:
+      typeof p.soldCount === 'number' && !Number.isNaN(p.soldCount) ? Math.max(0, p.soldCount) : 0,
+    rating:
+      typeof p.rating === 'number' && !Number.isNaN(p.rating)
+        ? Math.min(5, Math.max(0, Number(p.rating.toFixed(1))))
+        : 0,
+    ratingCount:
+      typeof p.ratingCount === 'number' && !Number.isNaN(p.ratingCount) ? Math.max(0, p.ratingCount) : 0,
     views: typeof p.views === 'number' && !Number.isNaN(p.views) ? p.views : Number(p.views) || 0,
     brand: p.brand?.trim() || 'SAMYOUNG',
     origin: p.origin?.trim() || 'Việt Nam',
@@ -67,6 +76,9 @@ export function mergeProductPayload(payload?: Partial<FirebaseProductPayload>): 
     supportHours: p.supportHours?.trim() ?? '',
     related: Array.isArray(p.related)
       ? (p.related as FirebaseRelatedProduct[]).filter((r) => r.name?.trim())
+      : [],
+    reviews: Array.isArray(p.reviews)
+      ? (p.reviews as FirebaseProductReview[]).filter((r) => r.content?.trim() && r.stars)
       : [],
     createdAt: now,
     updatedAt: now,

@@ -58,14 +58,20 @@ const onPageChange = (page: number) => {
           <td>{{ item.updatedAt ? new Date(item.updatedAt).toLocaleString('vi-VN') : '-' }}</td>
           <td class="admin-actions">
             <div class="admin-actions-inner">
-              <a-button size="small" @click="emit('edit', item.id)">Sửa</a-button>
+              <a-button size="small" class="admin-action-btn admin-action-btn--edit" @click="emit('edit', item.id)">
+                <span aria-hidden="true">✏️</span>
+                <span>Sửa</span>
+              </a-button>
               <a-popconfirm
                 :title="`Xóa danh mục '${item.name}'?`"
                 ok-text="Xóa"
-                cancel-text="Hủy"
+                cancel-text="Hủy bỏ"
                 @confirm="emit('delete', item.id, item.name)"
               >
-                <a-button size="small" danger>Xóa</a-button>
+                <a-button size="small" danger class="admin-action-btn admin-action-btn--delete">
+                  <span aria-hidden="true">🗑️</span>
+                  <span>Xóa</span>
+                </a-button>
               </a-popconfirm>
             </div>
           </td>

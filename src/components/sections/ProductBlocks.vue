@@ -5,6 +5,9 @@ import { useRouter } from 'vue-router'
 type ProductItem = {
   name: string
   imageUrl: string
+  price?: string
+  soldCount?: number
+  rating?: number
   tags?: string[]
   tab?: string
   href?: string
@@ -78,6 +81,37 @@ const badgeClass = (tag: string) => {
   if (key.includes('top') || key.includes('ban chay')) return 'is-top'
   if (key.includes('hot')) return 'is-hot'
   return 'is-default'
+}
+
+const displayTags = (block: ProductBlock, item: ProductItem) => {
+  if (item.tags?.length) return item.tags
+  const blockKey = block.title
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+  if (blockKey.includes('san pham moi nhat')) return ['NEW']
+  return []
+}
+
+const displayPrice = (item: ProductItem) => {
+  const value = item.price?.trim()
+  return value || 'Liên hệ'
+}
+
+const displaySold = (item: ProductItem) => {
+  const sold = typeof item.soldCount === 'number' && !Number.isNaN(item.soldCount) ? item.soldCount : 0
+  return Math.max(0, sold)
+}
+
+const normalizeRating = (item: ProductItem) => {
+  const rating = typeof item.rating === 'number' && !Number.isNaN(item.rating) ? item.rating : 0
+  return Math.min(5, Math.max(0, rating))
+}
+
+const ratingStars = (item: ProductItem) => {
+  const rating = normalizeRating(item)
+  const full = Math.round(rating)
+  return `${'★'.repeat(full)}${'☆'.repeat(5 - full)}`
 }
 
 const scrollSliderByCard = (title: string, direction: 'prev' | 'next') => {
@@ -188,9 +222,9 @@ onBeforeUnmount(() => {
               :class="{ 'block-card-link': Boolean(item.href) }"
               @click="handleNavigate(item)"
             >
-              <div v-if="item.tags?.length" class="block-card-badges">
+              <div v-if="displayTags(block, item).length" class="block-card-badges">
                 <span
-                  v-for="tag in item.tags"
+                  v-for="tag in displayTags(block, item)"
                   :key="`${item.name}-${tag}`"
                   class="block-badge"
                   :class="badgeClass(tag)"
@@ -200,7 +234,11 @@ onBeforeUnmount(() => {
               </div>
               <img :src="item.imageUrl" :alt="item.name" class="block-card-thumb" />
               <h3>{{ item.name }}</h3>
-              <p>Giá: Liên hệ</p>
+              <div class="block-card-meta">
+                <span>Đã bán: {{ displaySold(item) }}</span>
+                <span class="block-card-stars">{{ ratingStars(item) }} ({{ normalizeRating(item).toFixed(1) }})</span>
+              </div>
+              <p>Giá: {{ displayPrice(item) }}</p>
               <a href="#" class="quote-btn" @click.stop>Nhận Báo Giá</a>
             </article>
           </div>
@@ -221,9 +259,9 @@ onBeforeUnmount(() => {
             :class="{ 'block-card-link': Boolean(item.href) }"
             @click="handleNavigate(item)"
           >
-            <div v-if="item.tags?.length" class="block-card-badges">
+            <div v-if="displayTags(block, item).length" class="block-card-badges">
               <span
-                v-for="tag in item.tags"
+                v-for="tag in displayTags(block, item)"
                 :key="`${item.name}-${tag}`"
                 class="block-badge"
                 :class="badgeClass(tag)"
@@ -233,7 +271,11 @@ onBeforeUnmount(() => {
             </div>
             <img :src="item.imageUrl" :alt="item.name" class="block-card-thumb" />
             <h3>{{ item.name }}</h3>
-            <p>Giá: Liên hệ</p>
+            <div class="block-card-meta">
+              <span>Đã bán: {{ displaySold(item) }}</span>
+              <span class="block-card-stars">{{ ratingStars(item) }} ({{ normalizeRating(item).toFixed(1) }})</span>
+            </div>
+            <p>Giá: {{ displayPrice(item) }}</p>
             <a href="#" class="quote-btn" @click.stop>Nhận Báo Giá</a>
           </article>
         </div>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import { toSlug } from '../../data/siteData'
 
 type QuickTile = {
   title: string
@@ -50,7 +52,15 @@ onBeforeUnmount(() => {
       <aside class="sidebar">
         <ul>
           <li v-for="item in categoryItems" :key="item.id">
-            <a href="#">{{ item.name }}</a>
+            <RouterLink
+              :to="{
+                name: 'product-category',
+                params: { slug: toSlug(item.name) },
+                query: { label: item.name },
+              }"
+            >
+              {{ item.name }}
+            </RouterLink>
           </li>
         </ul>
       </aside>
@@ -64,9 +74,13 @@ onBeforeUnmount(() => {
 
         <div class="tile-grid">
           <article v-for="tile in quickTiles" :key="tile.title" class="tile-item">
-            <img :src="tile.imageUrl" :alt="tile.title" class="tile-thumb" />
-            <h3>{{ tile.title }}</h3>
-            <p>{{ tile.label }}</p>
+            <div class="tile-thumb-wrap">
+              <img :src="tile.imageUrl" :alt="tile.title" class="tile-thumb" />
+            </div>
+            <div class="tile-content">
+              <h3>{{ tile.title }}</h3>
+              <p>{{ tile.label }}</p>
+            </div>
           </article>
         </div>
       </div>

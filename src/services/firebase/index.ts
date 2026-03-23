@@ -7,6 +7,7 @@ export type {
   FirebaseContactRow,
   FirebaseCreateResponse,
   FirebaseProductPayload,
+  FirebaseProductReview,
   FirebaseProductRow,
   FirebaseProductSpec,
   FirebaseRelatedProduct,

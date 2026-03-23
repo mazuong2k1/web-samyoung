@@ -138,7 +138,18 @@ export const productDetail = {
   origin: 'Việt Nam',
   status: 'Còn hàng',
   views: '3652',
+  soldCount: 128,
   price: 'Liên hệ',
+  rating: 4.8,
+  ratingCount: 12,
+  reviews: [
+    {
+      fullName: 'Khách hàng CNC',
+      stars: 5,
+      content: 'Sản phẩm dùng ổn định, giao hàng nhanh.',
+      createdAt: new Date().toISOString(),
+    },
+  ],
   imageUrl: '/banner/product.jpeg',
   gallery: ['/banner/product.jpeg', '/banner/product.jpeg', '/banner/product.jpeg'],
   hotline: '0982 047 123',

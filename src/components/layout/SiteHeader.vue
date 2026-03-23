@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { ref, watch } from 'vue'
+import { sidebarCategories, toSlug } from '../../data/siteData'
 
 type MenuItem = {
   label: string
@@ -10,6 +12,8 @@ const { menuItems, logoUrl } = defineProps<{
   menuItems: MenuItem[]
   logoUrl?: string
 }>()
+const router = useRouter()
+const route = useRoute()
 
 const topPerks = [
   {
@@ -29,6 +33,42 @@ const topPerks = [
     iconUrl: '/icons/sale.png',
   },
 ]
+
+const isCategoryOpen = ref(false)
+
+const openCategoryMenu = () => {
+  isCategoryOpen.value = true
+}
+
+const closeCategoryMenu = () => {
+  isCategoryOpen.value = false
+}
+
+const toggleCategoryMenu = () => {
+  isCategoryOpen.value = !isCategoryOpen.value
+}
+
+const searchKeyword = ref('')
+
+const runSearch = () => {
+  const q = searchKeyword.value.trim()
+  void router.push({
+    name: 'product-category',
+    params: { slug: 'tat-ca' },
+    query: {
+      label: 'TẤT CẢ SẢN PHẨM',
+      ...(q ? { q } : {}),
+    },
+  })
+}
+
+watch(
+  () => route.query.q,
+  (q) => {
+    searchKeyword.value = typeof q === 'string' ? q : ''
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -60,8 +100,13 @@ const topPerks = [
         <select aria-label="Danh mục">
           <option>Tất cả</option>
         </select>
-        <input type="text" placeholder="Tìm kiếm sản phẩm bạn mong muốn" />
-        <button type="button" aria-label="Tìm kiếm">🔍</button>
+        <input
+          v-model.trim="searchKeyword"
+          type="text"
+          placeholder="Tìm kiếm sản phẩm bạn mong muốn"
+          @keydown.enter="runSearch"
+        />
+        <button type="button" aria-label="Tìm kiếm" @click="runSearch">🔍</button>
       </div>
 
       <a href="#" class="cart-btn">Giỏ hàng (0)</a>
@@ -70,7 +115,40 @@ const topPerks = [
 
   <nav class="navbar">
     <div class="container nav-inner">
-      <RouterLink to="/" class="nav-link nav-link-featured">☰ DANH MỤC SẢN PHẨM</RouterLink>
+      <div
+        class="nav-category-wrap"
+        @mouseenter="openCategoryMenu"
+        @mouseleave="closeCategoryMenu"
+      >
+        <button
+          type="button"
+          class="nav-link nav-link-featured nav-category-trigger"
+          :aria-expanded="isCategoryOpen"
+          @click="toggleCategoryMenu"
+        >
+          ☰ DANH MỤC SẢN PHẨM
+        </button>
+        <ul v-show="isCategoryOpen" class="nav-category-dropdown">
+          <li>
+            <RouterLink
+              :to="{ name: 'product-category', params: { slug: 'tat-ca' }, query: { label: 'TẤT CẢ SẢN PHẨM' } }"
+              class="nav-category-item"
+              @click="closeCategoryMenu"
+            >
+              TẤT CẢ SẢN PHẨM
+            </RouterLink>
+          </li>
+          <li v-for="item in sidebarCategories" :key="item">
+            <RouterLink
+              :to="{ name: 'product-category', params: { slug: toSlug(item) }, query: { label: item } }"
+              class="nav-category-item"
+              @click="closeCategoryMenu"
+            >
+              {{ item }}
+            </RouterLink>
+          </li>
+        </ul>
+      </div>
       <RouterLink
         v-for="item in menuItems"
         :key="item.path"

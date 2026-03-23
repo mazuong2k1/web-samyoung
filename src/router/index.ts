@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import ProductCategoryView from '../views/ProductCategoryView.vue'
 import ProductDetailView from '../views/ProductDetailView.vue'
 import ContactView from '../views/ContactView.vue'
 import AboutView from '../views/AboutView.vue'
@@ -12,13 +13,21 @@ import NotFoundView from '../views/NotFoundView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   scrollBehavior() {
-    return { top: 0 }
+    return {
+      top: 0,
+      behavior: 'smooth',
+    }
   },
   routes: [
     {
       path: '/',
       name: 'home',
       component: HomeView,
+    },
+    {
+      path: '/danh-muc/:slug',
+      name: 'product-category',
+      component: ProductCategoryView,
     },
     {
       path: '/san-pham/:slug',
