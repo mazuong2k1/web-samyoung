@@ -161,6 +161,13 @@ export const productDetail = {
   ],
 }
 
+/** Sidebar “Sản phẩm bán chạy” — dùng chung About / Đối tác */
+export const bestSellingProducts = [
+  { name: 'Mũi Taro Xoắn', imageUrl: '/banner/product.jpeg' },
+  { name: 'Mũi Dao Phay Trụ 4 Me Cắt (GE714)', imageUrl: '/banner/product.jpeg' },
+  { name: 'Mũi Dao Phay Cổ Dài 4Me Bo R (WER314)', imageUrl: '/banner/product.jpeg' },
+]
+
 export const toSlug = (value: string) =>
   value
     .normalize('NFD')

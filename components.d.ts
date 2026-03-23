@@ -15,6 +15,7 @@ declare module 'vue' {
     AForm: typeof import('ant-design-vue/es')['Form']
     AFormItem: typeof import('ant-design-vue/es')['FormItem']
     AInput: typeof import('ant-design-vue/es')['Input']
+    AppBreadcrumbs: typeof import('./src/components/layout/AppBreadcrumbs.vue')['default']
     ATextarea: typeof import('ant-design-vue/es')['Textarea']
     BestSellingSidebar: typeof import('./src/components/sections/BestSellingSidebar.vue')['default']
     CategorySection: typeof import('./src/components/sections/CategorySection.vue')['default']

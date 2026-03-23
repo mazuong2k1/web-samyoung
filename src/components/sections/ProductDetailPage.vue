@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import AppBreadcrumbs from '../layout/AppBreadcrumbs.vue'
 
 type ProductSpec = {
   label: string
@@ -33,12 +33,6 @@ const props = defineProps<{
   product: ProductDetail
 }>()
 
-const router = useRouter()
-
-const goHome = () => {
-  void router.push({ name: 'home' })
-}
-
 const activeTab = ref<'detail' | 'comment'>('detail')
 const activeImage = ref(props.product.imageUrl)
 const productImageList = computed(() => [props.product.imageUrl, ...props.product.gallery])
@@ -58,13 +52,14 @@ const detailRows = computed(() => [
 <template>
   <section class="product-detail-page">
     <div class="container">
-      <nav class="detail-path">
-        <button type="button" @click="goHome">Trang chủ</button>
-        <span class="sep">/</span>
-        <span>Dụng Cụ Cắt CNC - SAMYOUNG</span>
-        <span class="sep">/</span>
-        <span>Mũi Vát Mép</span>
-      </nav>
+      <AppBreadcrumbs
+        class="product-detail-breadcrumbs"
+        :items="[
+          { label: 'Trang chủ', to: '/' },
+          { label: 'Sản phẩm', to: '/' },
+          { label: product.name },
+        ]"
+      />
 
       <article class="detail-top">
         <div class="top-gallery">

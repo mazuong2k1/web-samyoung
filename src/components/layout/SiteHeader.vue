@@ -6,7 +6,7 @@ type MenuItem = {
   path: string
 }
 
-defineProps<{
+const { menuItems, logoUrl } = defineProps<{
   menuItems: MenuItem[]
   logoUrl?: string
 }>()
