@@ -1,5 +1,4 @@
 import { computed, onMounted, ref } from 'vue'
-import { sidebarCategories as sidebarCategoriesFallback } from '../data/siteData'
 import { fetchFirebaseCategories } from '../services/firebaseApi'
 import type { FirebaseCategoryRow } from '../services/firebaseApi'
 
@@ -38,10 +37,7 @@ export function usePublicCategories() {
     if (rows.value.length > 0) {
       return rows.value.map((c) => ({ id: c.id, name: c.name }))
     }
-    return sidebarCategoriesFallback.map((name, i) => ({
-      id: `fallback-${i}`,
-      name,
-    }))
+    return []
   })
 
   return {

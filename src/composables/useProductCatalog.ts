@@ -1,10 +1,11 @@
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { productBlocks as seedProductBlocks } from '../data/siteData'
 import { fetchFirebaseProducts } from '../services/firebaseApi'
 import type { FirebaseProductRow } from '../services/firebaseApi'
 import type { ProductBlock, ProductItem } from '../types/product'
 
-const STORAGE_KEY = 'samyoung:product-blocks:v1'
+const STORAGE_KEY = 'samyoung:product-blocks:v2'
+const LEGACY_STORAGE_KEY = 'samyoung:product-blocks:v1'
 const TAG_LABEL_MAP: Record<number, string> = {
   1: 'NEW',
   2: 'TOP BÁN CHẠY',
@@ -12,13 +13,6 @@ const TAG_LABEL_MAP: Record<number, string> = {
 }
 
 const genId = () => `p_${Math.random().toString(36).slice(2, 10)}_${Date.now().toString(36)}`
-
-const cloneSeed = (): ProductBlock[] =>
-  seedProductBlocks.map((block) => ({
-    ...block,
-    items: block.items.map((item) => ({ ...item })),
-    tabs: block.tabs ? [...block.tabs] : undefined,
-  }))
 
 const normalizeBlocks = (blocks: ProductBlock[]): ProductBlock[] =>
   blocks.map((block) => ({
@@ -30,28 +24,17 @@ const normalizeBlocks = (blocks: ProductBlock[]): ProductBlock[] =>
     })),
   }))
 
-const safeLoad = (): ProductBlock[] => {
-  if (typeof window === 'undefined') return normalizeBlocks(cloneSeed())
-
-  const raw = window.localStorage.getItem(STORAGE_KEY)
-  if (!raw) return normalizeBlocks(cloneSeed())
-
-  try {
-    const parsed = JSON.parse(raw) as ProductBlock[]
-    if (!Array.isArray(parsed)) return normalizeBlocks(cloneSeed())
-    return normalizeBlocks(parsed)
-  } catch {
-    return normalizeBlocks(cloneSeed())
-  }
-}
-
-const productBlocks = ref<ProductBlock[]>(safeLoad())
-let watching = false
+const productBlocks = ref<ProductBlock[]>([])
 let loadingFromApi: Promise<void> | null = null
 
-const saveToStorage = () => {
+const clearLegacyStorage = () => {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(productBlocks.value))
+  try {
+    window.localStorage.removeItem(STORAGE_KEY)
+    window.localStorage.removeItem(LEGACY_STORAGE_KEY)
+  } catch {
+    // Ignore storage access errors.
+  }
 }
 
 const normalizeHref = (href: string | undefined, name: string) => {
@@ -89,9 +72,10 @@ const rowToItem = (row: FirebaseProductRow): ProductItem => ({
 const buildBlocksFromApi = (rows: FirebaseProductRow[]): ProductBlock[] => {
   const groups = new Map<string, ProductItem[]>()
   const latestTitle = 'SẢN PHẨM MỚI NHẤT'
+  const otherTitle = 'SẢN PHẨM KHÁC'
 
   rows.forEach((row) => {
-    const title = row.blockTitle?.trim() || latestTitle
+    const title = row.blockTitle?.trim() || otherTitle
     const nextItems = groups.get(title) ?? []
     nextItems.push(rowToItem(row))
     groups.set(title, nextItems)
@@ -106,8 +90,10 @@ const buildBlocksFromApi = (rows: FirebaseProductRow[]): ProductBlock[] => {
   }
 
   const seedOrder = seedProductBlocks.map((b) => b.title)
-  const dynamicOrder = [...groups.keys()].filter((title) => !seedOrder.includes(title))
-  const titles = [...seedOrder, ...dynamicOrder].filter((title) => groups.has(title))
+  const defaultOrder = [latestTitle, 'PHỤ KIỆN MÁY PHAY CNC', 'DỤNG CỤ CẮT CNC - SAMYOUNG', otherTitle]
+  const orderedSeeds = seedOrder.length > 0 ? seedOrder : defaultOrder
+  const dynamicOrder = [...groups.keys()].filter((title) => !orderedSeeds.includes(title))
+  const titles = [...orderedSeeds, ...dynamicOrder].filter((title) => groups.has(title))
 
   return titles.map((title) => {
     const items = groups.get(title) ?? []
@@ -131,7 +117,7 @@ const hydrateFromApi = async () => {
         productBlocks.value = normalizeBlocks(buildBlocksFromApi(rows))
       }
     } catch {
-      // Giữ dữ liệu local/static khi API lỗi để tránh trắng trang.
+      // Giữ dữ liệu cache hiện tại nếu API lỗi/trễ.
     } finally {
       loadingFromApi = null
     }
@@ -146,13 +132,10 @@ export type AdminProductRow = ProductItem & {
 }
 
 export const useProductCatalog = () => {
-  if (!watching) {
-    watch(productBlocks, saveToStorage, { deep: true })
-    watching = true
-  }
-  onMounted(() => {
+  clearLegacyStorage()
+  if (!loadingFromApi) {
     void hydrateFromApi()
-  })
+  }
 
   const allRows = computed<AdminProductRow[]>(() =>
     productBlocks.value.flatMap((block) =>
@@ -241,7 +224,7 @@ export const useProductCatalog = () => {
   }
 
   const resetCatalog = () => {
-    productBlocks.value = normalizeBlocks(cloneSeed())
+    productBlocks.value = []
   }
 
   return {

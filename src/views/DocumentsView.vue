@@ -3,12 +3,13 @@ import { ref } from 'vue'
 import AppBreadcrumbs from '../components/layout/AppBreadcrumbs.vue'
 import DocumentList from '../components/sections/DocumentList.vue'
 import BestSellingSidebar from '../components/sections/BestSellingSidebar.vue'
+import { useBestSellingProducts } from '../composables/useBestSellingProducts'
 import { documentsSeed } from '../data/documents'
-import { bestSellingProducts } from '../data/siteData'
 import type { DocumentItem } from '../types/document'
 
 /** Sau có API: documents.value = await fetch(...).then(r => r.json()) */
 const documents = ref<DocumentItem[]>(documentsSeed)
+const { items: bestSellingProducts } = useBestSellingProducts()
 </script>
 
 <template>

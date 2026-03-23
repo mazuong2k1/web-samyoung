@@ -3,12 +3,13 @@ import { ref } from 'vue'
 import AppBreadcrumbs from '../components/layout/AppBreadcrumbs.vue'
 import NewsList from '../components/sections/NewsList.vue'
 import BestSellingSidebar from '../components/sections/BestSellingSidebar.vue'
+import { useBestSellingProducts } from '../composables/useBestSellingProducts'
 import { newsSeed } from '../data/news'
-import { bestSellingProducts } from '../data/siteData'
 import type { NewsItem } from '../types/news'
 
 /** Sau có API: articles.value = await fetch(...).then(r => r.json()) */
 const articles = ref<NewsItem[]>(newsSeed)
+const { items: bestSellingProducts } = useBestSellingProducts()
 </script>
 
 <template>

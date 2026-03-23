@@ -3,14 +3,15 @@ import { ref } from 'vue'
 import AppBreadcrumbs from '../components/layout/AppBreadcrumbs.vue'
 import PartnerGrid from '../components/sections/PartnerGrid.vue'
 import BestSellingSidebar from '../components/sections/BestSellingSidebar.vue'
+import { useBestSellingProducts } from '../composables/useBestSellingProducts'
 import { partnersSeed } from '../data/partners'
-import { bestSellingProducts } from '../data/siteData'
 import type { PartnerItem } from '../types/partner'
 
 /**
  * Sau khi có API: const res = await fetch('/api/partners'); partners.value = await res.json()
  */
 const partners = ref<PartnerItem[]>(partnersSeed)
+const { items: bestSellingProducts } = useBestSellingProducts()
 </script>
 
 <template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppBreadcrumbs from '../components/layout/AppBreadcrumbs.vue'
 import BestSellingSidebar from '../components/sections/BestSellingSidebar.vue'
-import { bestSellingProducts } from '../data/siteData'
+import { useBestSellingProducts } from '../composables/useBestSellingProducts'
 
 /**
  * Ảnh giới thiệu: copy file vào `public/` (vd. `public/images/gioi-thieu.jpg`) rồi gán:
@@ -9,6 +9,7 @@ import { bestSellingProducts } from '../data/siteData'
  * Để '' = hiển thị khung placeholder cho đến khi có ảnh.
  */
 const aboutIntroImage = ''
+const { items: bestSellingProducts } = useBestSellingProducts()
 </script>
 
 <template>
