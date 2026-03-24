@@ -27,7 +27,6 @@ declare module 'vue' {
     ATabPane: typeof import('ant-design-vue/es')['TabPane']
     ATabs: typeof import('ant-design-vue/es')['Tabs']
     ATextarea: typeof import('ant-design-vue/es')['Textarea']
-    AUpload: typeof import('ant-design-vue/es')['Upload']
     BestSellingSidebar: typeof import('./src/components/sections/BestSellingSidebar.vue')['default']
     CategorySection: typeof import('./src/components/sections/CategorySection.vue')['default']
     DocumentList: typeof import('./src/components/sections/DocumentList.vue')['default']

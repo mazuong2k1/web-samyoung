@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { ref, watch } from 'vue'
-import { sidebarCategories, toSlug } from '../../data/siteData'
+import { onMounted, ref, watch } from 'vue'
+import { toSlug } from '../../data/siteData'
+import { fetchFirebaseCategories } from '../../services/firebaseApi'
 
 type MenuItem = {
   label: string
@@ -14,6 +15,7 @@ const { menuItems, logoUrl } = defineProps<{
 }>()
 const router = useRouter()
 const route = useRoute()
+const CATEGORY_CACHE_KEY = 'samyoung.publicCategories.v1'
 
 const topPerks = [
   {
@@ -35,6 +37,44 @@ const topPerks = [
 ]
 
 const isCategoryOpen = ref(false)
+const sidebarCategories = ref<string[]>([])
+
+const parseCachedCategories = (raw: string | null) => {
+  if (!raw) return [] as string[]
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return [] as string[]
+    return parsed
+      .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      .map((item) => item.trim())
+  } catch {
+    return [] as string[]
+  }
+}
+
+const loadSidebarCategories = async () => {
+  const cached = parseCachedCategories(localStorage.getItem(CATEGORY_CACHE_KEY))
+  if (cached.length > 0) {
+    sidebarCategories.value = cached
+    return
+  }
+
+  try {
+    const categories = await fetchFirebaseCategories()
+    const names = categories
+      .map((category) => category.name?.trim())
+      .filter((name): name is string => Boolean(name))
+      .sort((a, b) => a.localeCompare(b, 'vi'))
+
+    if (names.length > 0) {
+      sidebarCategories.value = names
+      localStorage.setItem(CATEGORY_CACHE_KEY, JSON.stringify(names))
+      return
+    }
+  } catch {
+    sidebarCategories.value = []
+  }
+}
 
 const openCategoryMenu = () => {
   isCategoryOpen.value = true
@@ -69,6 +109,10 @@ watch(
   },
   { immediate: true },
 )
+
+onMounted(() => {
+  void loadSidebarCategories()
+})
 </script>
 
 <template>
@@ -97,9 +141,6 @@ watch(
       </RouterLink>
 
       <div class="search-wrap">
-        <select aria-label="Danh mục">
-          <option>Tất cả</option>
-        </select>
         <input
           v-model.trim="searchKeyword"
           type="text"
@@ -129,15 +170,6 @@ watch(
           ☰ DANH MỤC SẢN PHẨM
         </button>
         <ul v-show="isCategoryOpen" class="nav-category-dropdown">
-          <li>
-            <RouterLink
-              :to="{ name: 'product-category', params: { slug: 'tat-ca' }, query: { label: 'TẤT CẢ SẢN PHẨM' } }"
-              class="nav-category-item"
-              @click="closeCategoryMenu"
-            >
-              TẤT CẢ SẢN PHẨM
-            </RouterLink>
-          </li>
           <li v-for="item in sidebarCategories" :key="item">
             <RouterLink
               :to="{ name: 'product-category', params: { slug: toSlug(item) }, query: { label: item } }"

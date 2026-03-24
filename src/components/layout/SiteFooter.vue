@@ -1,7 +1,26 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 const year = new Date().getFullYear()
+
+/** Hiện nút lên đầu trang sau khi cuộn xuống (px) */
+const BACK_TOP_SCROLL_THRESHOLD = 320
+
+const showBackTop = ref(false)
+
+const updateBackTopVisibility = () => {
+  showBackTop.value = window.scrollY > BACK_TOP_SCROLL_THRESHOLD
+}
+
+onMounted(() => {
+  updateBackTopVisibility()
+  window.addEventListener('scroll', updateBackTopVisibility, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateBackTopVisibility)
+})
 
 const infoLinks = [
   { label: 'Cam kết chất lượng', to: '/ve-chung-toi' },
@@ -137,14 +156,33 @@ const scrollToTop = () => {
     </div>
 
     <div class="footer-bottom">
-      <button type="button" class="footer-back-top" aria-label="Lên đầu trang" @click="scrollToTop">
-        <span>▲</span>
-      </button>
       <div class="container footer-bottom-inner">
         <p class="footer-copyright">
           © Bản quyền thuộc về CÔNG TY TNHH CNC SAMYOUNG VINA © {{ year }} All Rights Reserved.
         </p>
       </div>
     </div>
+
+    <button
+      type="button"
+      class="footer-back-top"
+      :class="{ 'footer-back-top--visible': showBackTop }"
+      aria-label="Lên đầu trang"
+      @click="scrollToTop"
+    >
+      <svg
+        class="footer-back-top-icon"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.25"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 19V9M8 14l4-5 4 5" />
+      </svg>
+    </button>
   </footer>
 </template>

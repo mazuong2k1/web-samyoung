@@ -9,20 +9,6 @@ export const menuItems = [
   { label: 'LIÊN HỆ', path: '/lien-he' },
 ]
 
-export const sidebarCategories = [
-  'Dao phay CNC',
-  'Chuôi kẹp BT30',
-  'Chuôi kẹp BT40',
-  'Chuôi kẹp BT50',
-  'Chuôi kẹp HSK',
-  'Ống kẹp côn (collet)',
-  'Vít rút (đuôi chuột)',
-  'Chíp phay CNC',
-  'Cán + đầu phay (hợp kim + thép)',
-  'Đồ gá zeropoint',
-  'Đầu chuyển hướng',
-]
-
 export const quickTiles = [
   {
     title: 'PHỤ KIỆN MÁY PHAY CNC',
