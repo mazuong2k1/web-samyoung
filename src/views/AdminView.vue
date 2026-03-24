@@ -68,7 +68,7 @@ const galleryUploads = ref<string[]>([])
 const form = reactive({
   blockTitle: '',
   name: '',
-  imageUrl: '/banner/product.jpeg',
+  imageUrl: '',
   tags: [] as number[],
   tab: '',
   href: '',
@@ -98,6 +98,28 @@ const tagOptions = [
   { label: 'NEW', value: 1 },
   { label: 'TOP BÁN CHẠY', value: 2 },
   { label: 'HOT', value: 3 },
+]
+
+const productDescriptionPlaceholder = [
+  'VD: Mũi khoan thép gió HSS phi 5mm thương hiệu LMT, phù hợp khoan thép cacbon, gang.',
+  'Mô tả ngắn 2–4 câu: công dụng chính, đối tượng dùng, cam kết hàng chính hãng…',
+].join('\n')
+
+const productFeaturesPlaceholder = [
+  'VD — mỗi dòng một điểm nổi bật (không cần gõ dấu "-" ở đầu dòng):',
+  'Thép gió HSS, độ bền và độ cứng cao',
+  'Đường kính mũi 5mm, cán dao 6mm, chiều dài dao 86mm',
+  'Phù hợp khoan thép, gang; tưới nguội ngoài',
+].join('\n')
+const warrantyOptions = [
+  { label: 'Không bảo hành', value: '' },
+  { label: '1 tháng', value: '1 tháng' },
+  { label: '3 tháng', value: '3 tháng' },
+  { label: '6 tháng', value: '6 tháng' },
+  { label: '12 tháng', value: '12 tháng' },
+  { label: '18 tháng', value: '18 tháng' },
+  { label: '24 tháng', value: '24 tháng' },
+  { label: '36 tháng', value: '36 tháng' },
 ]
 
 const blockTitles = computed(() => {
@@ -195,7 +217,7 @@ const linesToList = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boo
 const resetForm = () => {
   form.blockTitle = blockTitles.value[0] ?? ''
   form.name = ''
-  form.imageUrl = '/banner/product.jpeg'
+  form.imageUrl = ''
   form.tags = []
   form.tab = ''
   form.href = ''
@@ -266,12 +288,72 @@ const parseRatingInput = (value: string | number) =>
     .replace(',', '.')
     .replace(/[^0-9.]/g, '')
 
+const isModifierCombo = (e: KeyboardEvent) => e.ctrlKey || e.metaKey || e.altKey
+
+const allowIntegerKey = (e: KeyboardEvent) => {
+  if (isModifierCombo(e)) return true
+  const allowed = new Set([
+    'Backspace',
+    'Delete',
+    'Tab',
+    'Escape',
+    'Enter',
+    'ArrowLeft',
+    'ArrowRight',
+    'ArrowUp',
+    'ArrowDown',
+    'Home',
+    'End',
+  ])
+  if (allowed.has(e.key)) return true
+  return /^\d$/.test(e.key)
+}
+
+/** Chặn gõ chữ; InputNumber vẫn gán raw string vào input nên cần chặn ở keydown. */
+const onIntegerInputKeydown = (e: KeyboardEvent) => {
+  if (!allowIntegerKey(e)) e.preventDefault()
+}
+
+const allowRatingKey = (e: KeyboardEvent) => {
+  if (allowIntegerKey(e)) return true
+  if (e.key === '.' || e.key === ',') {
+    const t = e.target as HTMLInputElement
+    const v = t.value ?? ''
+    return !(v.includes('.') || v.includes(','))
+  }
+  return false
+}
+
+const onRatingInputKeydown = (e: KeyboardEvent) => {
+  if (!allowRatingKey(e)) e.preventDefault()
+}
+
+const pasteIntToForm =
+  (key: 'views' | 'soldCount' | 'ratingCount') => (e: ClipboardEvent) => {
+    e.preventDefault()
+    const raw = e.clipboardData?.getData('text') ?? ''
+    const digits = raw.replace(/\D/g, '')
+    const n = digits === '' ? 0 : Number.parseInt(digits, 10)
+    form[key] = Number.isFinite(n) ? Math.max(0, n) : 0
+  }
+
+const onRatingPaste = (e: ClipboardEvent) => {
+  e.preventDefault()
+  const raw = (e.clipboardData?.getData('text') ?? '').trim().replace(',', '.')
+  const cleaned = raw.replace(/[^0-9.]/g, '')
+  const dot = cleaned.indexOf('.')
+  const norm =
+    dot === -1 ? cleaned : `${cleaned.slice(0, dot + 1)}${cleaned.slice(dot + 1).replace(/\./g, '')}`
+  const num = Number(norm)
+  form.rating = Number.isFinite(num) ? parseRatingValue(num) : 0
+}
+
 const collectMissingRequiredFields = () => {
   const missing: string[] = []
   if (!form.blockTitle.trim()) missing.push('Nhóm sản phẩm')
   if (!form.code.trim()) missing.push('Mã sản phẩm')
   if (!form.name.trim()) missing.push('Tên sản phẩm')
-  if (!form.imageUrl.trim()) missing.push('Ảnh chính')
+  if (!form.imageUrl.trim()) missing.push('Ảnh chính (chọn file upload)')
   if (!form.brand.trim()) missing.push('Thương hiệu')
   if (!form.origin.trim()) missing.push('Xuất xứ')
   if (!form.stockStatus.trim()) missing.push('Tình trạng kho')
@@ -728,10 +810,36 @@ onMounted(() => {
               class="admin-file-input"
               @change="onMainImageSelect"
             />
+            <p v-if="!isEdit && !form.imageUrl.trim()" class="admin-form-hint">
+              Bắt buộc chọn ảnh từ máy; không dùng ảnh mặc định.
+            </p>
             <div v-if="form.imageUrl" class="admin-image-preview">
               <img :src="form.imageUrl" alt="Preview" class="admin-image-preview-img" />
             </div>
           </a-form-item>
+          <a-form-item label="Ảnh phụ (tối đa 5 ảnh)">
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              class="admin-file-input"
+              @change="onGalleryImagesSelect"
+            />
+            <div v-if="galleryUploads.length" class="admin-gallery-preview">
+              <div
+                v-for="(img, idx) in galleryUploads"
+                :key="`${img}-${idx}`"
+                class="admin-gallery-item"
+              >
+                <img :src="img" :alt="`Gallery ${idx + 1}`" class="admin-gallery-img" />
+                <button type="button" class="admin-gallery-remove" @click="removeGalleryImage(idx)">
+                  X
+                </button>
+              </div>
+            </div>
+          </a-form-item>
+        </div>
+        <div class="admin-product-form-grid">
           <a-form-item label="Tag">
             <a-select
               v-model:value="form.tags"
@@ -751,7 +859,10 @@ onMounted(() => {
               :min="0"
               :precision="0"
               :parser="parseIntegerInput"
+              inputmode="numeric"
               style="width: 100%"
+              @keydown="onIntegerInputKeydown"
+              @paste="pasteIntToForm('views')"
             />
           </a-form-item>
         </div>
@@ -762,7 +873,10 @@ onMounted(() => {
               :min="0"
               :precision="0"
               :parser="parseIntegerInput"
+              inputmode="numeric"
               style="width: 100%"
+              @keydown="onIntegerInputKeydown"
+              @paste="pasteIntToForm('soldCount')"
             />
           </a-form-item>
           <a-form-item label="Điểm đánh giá (0-5)">
@@ -772,7 +886,10 @@ onMounted(() => {
               :max="5"
               :step="0.1"
               :parser="parseRatingInput"
+              inputmode="decimal"
               style="width: 100%"
+              @keydown="onRatingInputKeydown"
+              @paste="onRatingPaste"
             />
           </a-form-item>
         </div>
@@ -783,7 +900,10 @@ onMounted(() => {
               :min="0"
               :precision="0"
               :parser="parseIntegerInput"
+              inputmode="numeric"
               style="width: 100%"
+              @keydown="onIntegerInputKeydown"
+              @paste="pasteIntToForm('ratingCount')"
             />
           </a-form-item>
           <div />
@@ -830,7 +950,11 @@ onMounted(() => {
         </div>
         <div class="admin-product-form-grid">
           <a-form-item label="Bảo hành">
-            <a-input v-model:value="form.warranty" />
+            <a-select
+              v-model:value="form.warranty"
+              :options="warrantyOptions"
+              placeholder="Chọn thời gian bảo hành"
+            />
           </a-form-item>
           <a-form-item label="Giao hàng">
             <a-input v-model:value="form.delivery" />
@@ -840,35 +964,20 @@ onMounted(() => {
           <a-input v-model:value="form.receipt" />
         </a-form-item>
 
-        <p class="admin-form-section-title">Media</p>
-        <a-form-item label="Ảnh phụ (tối đa 5 ảnh)">
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            class="admin-file-input"
-            @change="onGalleryImagesSelect"
-          />
-          <div v-if="galleryUploads.length" class="admin-gallery-preview">
-            <div
-              v-for="(img, idx) in galleryUploads"
-              :key="`${img}-${idx}`"
-              class="admin-gallery-item"
-            >
-              <img :src="img" :alt="`Gallery ${idx + 1}`" class="admin-gallery-img" />
-              <button type="button" class="admin-gallery-remove" @click="removeGalleryImage(idx)">
-                X
-              </button>
-            </div>
-          </div>
-        </a-form-item>
-
         <p class="admin-form-section-title">Nội dung chi tiết</p>
         <a-form-item label="Mô tả / đoạn giới thiệu">
-          <a-textarea v-model:value="form.description" :rows="4" placeholder="Hiển thị phần mô tả phía trên bullet..." />
+          <a-textarea
+            v-model:value="form.description"
+            :rows="4"
+            :placeholder="productDescriptionPlaceholder"
+          />
         </a-form-item>
         <a-form-item label="Điểm nổi bật (mỗi dòng một gạch đầu dòng)">
-          <a-textarea v-model:value="form.featuresText" :rows="5" />
+          <a-textarea
+            v-model:value="form.featuresText"
+            :rows="5"
+            :placeholder="productFeaturesPlaceholder"
+          />
         </a-form-item>
 
         <p class="admin-form-section-title">Thông số kỹ thuật</p>

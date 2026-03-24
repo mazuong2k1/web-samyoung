@@ -10,6 +10,10 @@ type ProductSpec = {
 type RelatedProduct = {
   name: string
   imageUrl: string
+  price?: string
+  soldCount?: number
+  rating?: number
+  href?: string
 }
 
 type ProductReview = {
@@ -56,19 +60,42 @@ const emit = defineEmits<{
 }>()
 
 const activeTab = ref<'detail' | 'comment'>('detail')
-const activeImage = ref(props.product.imageUrl)
-const previewImage = ref(props.product.imageUrl)
+const activeImage = ref(props.product.imageUrl ?? '')
+const previewImage = ref(props.product.imageUrl ?? '')
 const isPreviewOpen = ref(false)
 const selectedRating = ref(0)
 const reviewName = ref('')
 const reviewContent = ref('')
 const reviewStars = ref(0)
+const hasText = (value?: string) => Boolean(value?.trim())
+const fallbackRelatedImage = '/banner/product.jpeg'
+const isProductLoading = computed(() => !hasText(props.product?.name))
 const productImageList = computed(() => {
-  const merged = [props.product.imageUrl, ...props.product.gallery].filter((image) => Boolean(image?.trim()))
+  const merged = [props.product.imageUrl ?? '', ...(props.product.gallery ?? [])].filter((image) =>
+    Boolean(image?.trim()),
+  )
   return [...new Set(merged)]
 })
 const dash = (v?: string) => (v && v.trim() ? v : '-')
 const ratingOptions = [1, 2, 3, 4, 5] as const
+const toSlug = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+const normalizeDetailHref = (item: RelatedProduct) => {
+  const raw = item.href?.trim()
+  if (raw) {
+    const normalized = raw.replace(/^\//, '')
+    if (normalized.startsWith('san-pham/')) return `/${normalized}`
+    return `/san-pham/${normalized}`
+  }
+  return `/san-pham/${toSlug(item.name)}`
+}
 
 const normalizeRating = (value?: number) => {
   if (typeof value !== 'number' || Number.isNaN(value)) return 0
@@ -81,7 +108,24 @@ const ratingSummaryStars = computed(() => {
   const full = Math.round(averageRating.value)
   return `${'★'.repeat(full)}${'☆'.repeat(5 - full)}`
 })
+const formattedViews = computed(() => {
+  const num = Number(props.product.views ?? 0)
+  if (!Number.isFinite(num)) return '0'
+  return new Intl.NumberFormat('vi-VN').format(Math.max(0, Math.floor(num)))
+})
 const recentReviews = computed(() => props.product.reviews ?? [])
+const relatedProducts = computed(() =>
+  (props.product.related ?? [])
+    .filter((item) => hasText(item?.name))
+    .map((item) => ({
+      name: item.name.trim(),
+      imageUrl: item.imageUrl?.trim() || props.product.imageUrl || fallbackRelatedImage,
+      price: item.price?.trim() || 'Liên hệ',
+      soldCount: typeof item.soldCount === 'number' ? Math.max(0, item.soldCount) : 0,
+      rating: typeof item.rating === 'number' ? Math.min(5, Math.max(0, item.rating)) : 0,
+      href: normalizeDetailHref(item),
+    })),
+)
 
 const detailRows = computed(() => [
   { label: 'Mã sản phẩm', value: props.product.code },
@@ -95,6 +139,11 @@ const detailRows = computed(() => [
   { label: 'Nhận hàng', value: dash(props.product.receipt) },
   { label: 'Tình trạng', value: props.product.status },
 ])
+
+const isInStockStatus = (value: string) => {
+  const v = value.trim().toLowerCase()
+  return v === 'còn hàng' || v.startsWith('còn hàng')
+}
 
 const openPreview = (image: string) => {
   previewImage.value = image
@@ -131,8 +180,8 @@ const submitReview = () => {
 watch(
   () => props.product.imageUrl,
   (nextImage) => {
-    activeImage.value = nextImage
-    previewImage.value = nextImage
+    activeImage.value = nextImage ?? ''
+    previewImage.value = nextImage ?? ''
     closePreview()
   },
 )
@@ -171,17 +220,21 @@ onBeforeUnmount(() => {
         :items="[
           { label: 'Trang chủ', to: '/' },
           { label: 'Sản phẩm', to: '/' },
-          { label: product.name },
+          { label: product.name || 'Đang tải...' },
         ]"
       />
 
-      <article class="detail-top">
+      <div v-if="isProductLoading" class="detail-loading-state" role="status" aria-live="polite">
+        Đang tải dữ liệu sản phẩm...
+      </div>
+
+      <article v-else class="detail-top">
         <div class="top-gallery">
           <img
             :src="activeImage"
             :alt="product.name"
             class="top-main-image top-main-image-zoomable"
-            @click="openPreview(activeImage)"
+            @click="activeImage && openPreview(activeImage)"
           />
           <div class="top-thumbs">
             <button
@@ -195,11 +248,12 @@ onBeforeUnmount(() => {
               <img :src="image" :alt="`${product.name} ${index + 1}`" />
             </button>
           </div>
+
         </div>
 
         <div class="top-info">
           <h1>{{ product.name }}</h1>
-          <p class="top-views">{{ product.views }} lượt xem</p>
+          <p class="top-views">{{ formattedViews }} lượt xem</p>
           <p class="top-price">Giá: {{ product.price }}</p>
           <div class="top-rating-summary">
             <span class="top-rating-stars">{{ ratingSummaryStars }}</span>
@@ -233,7 +287,11 @@ onBeforeUnmount(() => {
           <ul class="top-meta">
             <li v-for="row in detailRows" :key="row.label">
               <span>{{ row.label }}:</span>
-              <strong>{{ row.value }}</strong>
+              <strong
+                class="top-meta-value"
+                :class="{ 'top-meta-value--instock': row.label === 'Tình trạng' && isInStockStatus(row.value) }"
+                >{{ row.value }}</strong
+              >
             </li>
           </ul>
 
@@ -331,6 +389,31 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </article>
+
+      <section class="related-showcase">
+        <h2>SẢN PHẨM THƯỜNG ĐƯỢC XEM CÙNG</h2>
+        <div v-if="relatedProducts.length" class="related-showcase-list">
+          <a
+            v-for="(related, index) in relatedProducts"
+            :key="`${related.name}-${index}`"
+            :href="related.href"
+            class="block-card block-card-link related-showcase-card"
+          >
+            <img :src="related.imageUrl" :alt="related.name" class="block-card-thumb" />
+            <h3>{{ related.name }}</h3>
+            <div class="block-card-meta">
+              <span>Đã bán: {{ related.soldCount }}</span>
+              <span class="block-card-stars"
+                >{{ '★'.repeat(Math.round(related.rating ?? 0)) }}{{ '☆'.repeat(5 - Math.round(related.rating ?? 0)) }}
+                ({{ (related.rating ?? 0).toFixed(1) }})</span
+              >
+            </div>
+            <p>Giá: {{ related.price }}</p>
+            <span class="quote-btn">Nhận Báo Giá</span>
+          </a>
+        </div>
+        <p v-else class="related-showcase-empty">Chưa có sản phẩm liên quan.</p>
+      </section>
     </div>
 
     <div

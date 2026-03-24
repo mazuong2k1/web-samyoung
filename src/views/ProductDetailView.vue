@@ -54,6 +54,27 @@ const currentFirebaseProduct = computed(() => {
   return firebaseProducts.value.find((row) => matchesFirebaseSlug(row, s)) ?? null
 })
 
+const buildAutoRelatedProducts = (row: FirebaseProductRow) => {
+  const sameCategory = firebaseProducts.value
+    .filter((candidate) => candidate.id !== row.id)
+    .filter((candidate) => {
+      const sameTab = row.tab?.trim() && candidate.tab?.trim() === row.tab?.trim()
+      const sameBlock =
+        row.blockTitle?.trim() && candidate.blockTitle?.trim() === row.blockTitle?.trim()
+      return Boolean(sameTab || sameBlock)
+    })
+    .slice(0, 8)
+
+  return sameCategory.map((item) => ({
+    name: item.name?.trim() || 'Sản phẩm',
+    imageUrl: item.imageUrl?.trim() || '/banner/product.jpeg',
+    price: item.priceIsContact === false ? (item.price?.trim() || 'Liên hệ') : 'Liên hệ',
+    soldCount: typeof item.soldCount === 'number' ? Math.max(0, item.soldCount) : 0,
+    rating: typeof item.rating === 'number' ? Math.min(5, Math.max(0, item.rating)) : 0,
+    href: item.href?.trim() || item.slug?.trim() || '',
+  }))
+}
+
 const calcNextRatingState = (currentRating: number, currentCount: number, stars: number) => {
   const safeCurrentRating = Number.isFinite(currentRating) ? Math.min(5, Math.max(0, currentRating)) : 0
   const safeCurrentCount = Number.isFinite(currentCount) ? Math.max(0, Math.floor(currentCount)) : 0
@@ -143,7 +164,12 @@ const resolvedProduct = computed(() => {
 
   const fromApi = firebaseProducts.value.find((row) => matchesFirebaseSlug(row, s))
   if (fromApi) {
-    return mapFirebaseRowToProductDetail(fromApi)
+    const mapped = mapFirebaseRowToProductDetail(fromApi)
+    if (mapped.related.length > 0) return mapped
+    return {
+      ...mapped,
+      related: buildAutoRelatedProducts(fromApi),
+    }
   }
 
   if (s === 'mui-vat-mep-centering-2cen') return productDetail
