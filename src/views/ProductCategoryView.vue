@@ -30,30 +30,44 @@ const getDetailPath = (item: ProductItem) => {
   return `/san-pham/${toSlug(item.name)}`
 }
 
+const dedupeProducts = (items: ProductItem[]) => {
+  const seen = new Set<string>()
+  return items.filter((item) => {
+    const key = item.id?.trim() || item.href?.trim() || toSlug(item.name)
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 const categoryMatchedItems = computed(() => {
   const slug = categorySlug.value
   if (!slug) return [] as ProductItem[]
   if (slug === 'tat-ca') {
-    return productBlocks.value.flatMap((block) =>
-      block.items.map((item) => ({
-        ...item,
-        href: getDetailPath(item),
-      })),
+    return dedupeProducts(
+      productBlocks.value.flatMap((block) =>
+        block.items.map((item) => ({
+          ...item,
+          href: getDetailPath(item),
+        })),
+      ),
     )
   }
 
-  return productBlocks.value.flatMap((block) =>
-    block.items
-      .filter((item) => {
-        const inTitle = toSlug(block.title).includes(slug)
-        const inTab = toSlug(item.tab ?? '').includes(slug)
-        const inName = toSlug(item.name).includes(slug)
-        return inTitle || inTab || inName
-      })
-      .map((item) => ({
-        ...item,
-        href: getDetailPath(item),
-      })),
+  return dedupeProducts(
+    productBlocks.value.flatMap((block) =>
+      block.items
+        .filter((item) => {
+          const inTitle = toSlug(block.title).includes(slug)
+          const inTab = toSlug(item.tab ?? '').includes(slug)
+          const inName = toSlug(item.name).includes(slug)
+          return inTitle || inTab || inName
+        })
+        .map((item) => ({
+          ...item,
+          href: getDetailPath(item),
+        })),
+    ),
   )
 })
 
