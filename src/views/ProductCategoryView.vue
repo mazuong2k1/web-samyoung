@@ -106,8 +106,25 @@ const categoryBlock = computed(() => [
       <h1 class="page-main-title">Sản phẩm: {{ categoryLabel }}</h1>
 
       <ProductBlocks v-if="filteredItems.length > 0" :blocks="categoryBlock" />
-      <div v-else class="category-empty">
-        Chưa có sản phẩm cho danh mục này.
+      <div v-else class="category-empty" role="status">
+        <span class="category-empty-icon" aria-hidden="true">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M8 7V5a4 4 0 0 1 8 0v2" />
+            <rect x="3" y="7" width="18" height="14" rx="2" />
+            <path d="M3 12h18" />
+          </svg>
+        </span>
+        <p class="category-empty-text">Chưa có sản phẩm cho danh mục này.</p>
       </div>
     </div>
   </section>

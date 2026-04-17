@@ -158,6 +158,7 @@ onMounted(() => {
     <div class="container nav-inner">
       <div
         class="nav-category-wrap"
+        :class="{ 'nav-category-wrap--open': isCategoryOpen }"
         @mouseenter="openCategoryMenu"
         @mouseleave="closeCategoryMenu"
       >
