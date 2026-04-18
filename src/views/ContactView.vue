@@ -4,6 +4,7 @@ import { message } from 'ant-design-vue'
 import type { Rule } from 'ant-design-vue/es/form'
 import AppBreadcrumbs from '../components/layout/AppBreadcrumbs.vue'
 import { createFirebaseContact } from '../services/firebaseApi'
+import { COMPANY_PHONES } from '../data/companyPhones'
 
 const form = reactive({
   fullName: '',
@@ -105,23 +106,27 @@ const company = {
   name: 'CÔNG TY TNHH CNC SAMYOUNG VINA',
   nameEn: 'SAMYOUNG VINA CNC COMPANY LIMITED',
   address: 'Thôn Sáp Mai, Xã Thiên Lộc, Thành phố Hà Nội, Việt Nam',
-  phone: '0962750598',
   email: 'cncsamyoungvina@gmail.com',
   taxId: '0111346229',
   representative: 'ĐẶNG THỊ HIỀN – Giám đốc',
 }
 
 const socials = [
-  { label: 'Zalo', href: 'https://zalo.me/0985493875', icon: 'zalo' },
+  ...COMPANY_PHONES.map((p) => ({
+    label: 'Zalo',
+    href: p.zalo,
+    icon: 'zalo' as const,
+    phoneHint: p.display,
+  })),
   {
     label: 'Facebook',
     href: 'https://www.facebook.com/share/1EexnLvRh5/?mibextid=wwXIfr',
-    icon: 'fb',
+    icon: 'fb' as const,
   },
   {
     label: 'Messenger',
     href: 'https://www.facebook.com/share/1LGj4X8hWB/?mibextid=wwXIfr',
-    icon: 'mess',
+    icon: 'mess' as const,
   },
 ]
 </script>
@@ -169,9 +174,14 @@ const socials = [
               </span>
               <div>
                 <strong>Điện thoại / Hotline</strong>
-                <a :href="`tel:${company.phone.replace(/\s/g, '')}`" class="contact-link-phone">{{
-                  company.phone
-                }}</a>
+                <span class="contact-phones-row">
+                  <template v-for="(p, i) in COMPANY_PHONES" :key="p.tel">
+                    <a :href="`tel:${p.tel}`" class="contact-link-phone">{{ p.display }}</a>
+                    <span v-if="i < COMPANY_PHONES.length - 1" class="contact-phone-sep" aria-hidden="true">
+                      —
+                    </span>
+                  </template>
+                </span>
               </div>
             </li>
             <li class="contact-info-item">
@@ -217,12 +227,13 @@ const socials = [
             <div class="contact-social-btns">
               <a
                 v-for="s in socials"
-                :key="s.label"
+                :key="`${s.label}-${s.href}`"
                 :href="s.href"
                 class="contact-social-btn"
                 :class="`is-${s.icon}`"
                 target="_blank"
                 rel="noopener noreferrer"
+                :title="'phoneHint' in s && s.phoneHint ? `Zalo ${s.phoneHint}` : undefined"
               >
                 <span v-if="s.icon === 'zalo'">Zalo</span>
                 <span v-else-if="s.icon === 'fb'">f</span>

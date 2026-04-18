@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AAlert: typeof import('ant-design-vue/es')['Alert']
     AButton: typeof import('ant-design-vue/es')['Button']
     ACheckbox: typeof import('ant-design-vue/es')['Checkbox']
     AForm: typeof import('ant-design-vue/es')['Form']
@@ -38,6 +39,7 @@ declare module 'vue' {
     PartnerGrid: typeof import('./src/components/sections/PartnerGrid.vue')['default']
     ProductBlocks: typeof import('./src/components/sections/ProductBlocks.vue')['default']
     ProductDetailPage: typeof import('./src/components/sections/ProductDetailPage.vue')['default']
+    ProductHighlightContact: typeof import('./src/components/product/ProductHighlightContact.vue')['default']
     ProductSection: typeof import('./src/components/sections/ProductSection.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

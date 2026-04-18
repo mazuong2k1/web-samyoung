@@ -43,7 +43,7 @@ export const productDetail = {
   reviews: [],
   imageUrl: '/banner/product.jpeg',
   gallery: [],
-  hotline: '0982 047 123',
+  hotline: '098 5493875 — 096 1054936',
   supportHours: '',
   features: [],
   specs: [],

@@ -72,7 +72,7 @@ export function mergeProductPayload(payload?: Partial<FirebaseProductPayload>): 
     specs: Array.isArray(p.specs)
       ? (p.specs as FirebaseProductSpec[]).filter((s) => s.label?.trim() || s.value?.trim())
       : [],
-    hotline: p.hotline?.trim() || '0982 047 123',
+    hotline: p.hotline?.trim() || '098 5493875 — 096 1054936',
     supportHours: p.supportHours?.trim() ?? '',
     related: Array.isArray(p.related)
       ? (p.related as FirebaseRelatedProduct[]).filter((r) => r.name?.trim())

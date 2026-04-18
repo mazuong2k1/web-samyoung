@@ -65,7 +65,10 @@ const { items: bestSellingProducts } = useBestSellingProducts()
           <div class="about-prose">
             <p>
               Trụ sở đặt tại <strong>Thôn Sáp Mai, Xã Thiên Lộc, Thành phố Hà Nội</strong>. Khách hàng có thể
-              liên hệ trực tiếp qua hotline <a href="tel:0962750598">0962750598</a> hoặc email
+              liên hệ trực tiếp qua hotline
+              <a href="tel:0985493875">098 5493875</a> —
+              <a href="tel:0961054936">096 1054936</a>
+              hoặc email
               <a href="mailto:cncsamyoungvina@gmail.com">cncsamyoungvina@gmail.com</a> để nhận báo giá và hỗ trợ
               kỹ thuật.
             </p>

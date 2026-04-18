@@ -1,6 +1,17 @@
+<script setup lang="ts">
+import { COMPANY_PHONES } from '../../data/companyPhones'
+</script>
+
 <template>
   <div class="floating-contact" aria-hidden="true">
-    <a href="tel:0985493875" class="float-icon float-phone" aria-label="Gọi điện">
+    <a
+      v-for="(p, i) in COMPANY_PHONES"
+      :key="`phone-${p.tel}`"
+      :href="`tel:${p.tel}`"
+      class="float-icon float-phone"
+      :class="{ 'float-phone-second': i === 1 }"
+      :aria-label="`Gọi ${p.display}`"
+    >
       <svg viewBox="0 0 24 24" role="presentation" aria-hidden="true">
         <path
           d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.4 21 3 13.6 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.24 1.02l-2.21 2.2Z"
@@ -10,9 +21,13 @@
     </a>
 
     <a
-      href="https://zalo.me/0985493875"
+      v-for="(p, i) in COMPANY_PHONES"
+      :key="`zalo-${p.zalo}`"
+      :href="p.zalo"
       class="float-icon float-zalo"
-      aria-label="Zalo"
+      :class="{ 'float-zalo-second': i === 1 }"
+      :aria-label="`Zalo ${p.display}`"
+      :title="`Zalo ${p.display}`"
       target="_blank"
       rel="noopener noreferrer"
     >

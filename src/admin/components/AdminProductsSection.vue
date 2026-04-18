@@ -6,6 +6,7 @@ import { toSlug } from '../../data/siteData'
 defineProps<{
   dashboard: { totalBlocks: number; totalProducts: number; withTabs: number }
   loadingRows: boolean
+  syncingHighlights?: boolean
   rows: FirebaseProductRow[]
   currentPage: number
   pageSize: number
@@ -32,6 +33,7 @@ const tagItems = (tags: unknown) =>
 const emit = defineEmits<{
   (event: 'create'): void
   (event: 'reload'): void
+  (event: 'sync-highlights'): void
   (event: 'edit', id: string): void
   (event: 'delete', id: string, name: string): void
   (event: 'page-change', page: number): void
@@ -84,6 +86,16 @@ const openDetail = (item: FirebaseProductRow) => {
       @confirm="emit('reload')"
     >
       <a-button :loading="loadingRows">Tải lại</a-button>
+    </a-popconfirm>
+    <a-popconfirm
+      title="Ghi đè trường «điểm nổi bật» trên Firebase?"
+      description="Mọi sản phẩm sẽ dùng nội dung liên hệ mặc định (SAMYOUNG VINA). Thao tác không xóa các trường khác."
+      ok-text="Đồng bộ"
+      cancel-text="Hủy"
+      :disabled="loadingRows"
+      @confirm="emit('sync-highlights')"
+    >
+      <a-button :loading="syncingHighlights" :disabled="loadingRows">Đồng bộ điểm nổi bật</a-button>
     </a-popconfirm>
   </div>
 

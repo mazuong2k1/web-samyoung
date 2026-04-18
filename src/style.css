@@ -1750,9 +1750,17 @@ a {
   animation-delay: 0s;
 }
 
+.float-phone-second {
+  animation-delay: 0.1s;
+}
+
 .float-zalo {
   background: linear-gradient(145deg, #25a0ff 0%, #0a66ff 100%);
   animation-delay: 0.2s;
+}
+
+.float-zalo-second {
+  animation-delay: 0.35s;
 }
 
 .float-zalo span {
@@ -2804,6 +2812,15 @@ a {
   font-weight: 800;
   letter-spacing: 0.02em;
   line-height: 1.3;
+}
+
+.benefit-contact-phones {
+  margin: 0;
+}
+
+.benefit-contact-sep {
+  color: #64748b;
+  font-weight: 600;
 }
 
 .detail-tabs-wrap {

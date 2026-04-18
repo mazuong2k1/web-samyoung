@@ -8,6 +8,8 @@ import AdminContactsSection from '../admin/components/AdminContactsSection.vue'
 import AdminProductsSection from '../admin/components/AdminProductsSection.vue'
 import AdminTabsNav from '../admin/components/AdminTabsNav.vue'
 import { productBlocks, toSlug } from '../data/siteData'
+import { DEFAULT_PRODUCT_FEATURE_LINES } from '../data/defaultProductHighlight'
+import { COMPANY_HOTLINE_DISPLAY } from '../data/companyPhones'
 import { sortByCreatedAtDesc } from '../utils/sortByTime'
 import { formatVndFromDigitsString, normalizeStoredPriceForInput } from '../utils/vndPriceInput'
 import {
@@ -44,6 +46,7 @@ const isEdit = ref(false)
 const editingId = ref('')
 const formError = ref('')
 const savingProduct = ref(false)
+const syncingHighlights = ref(false)
 const savingCategory = ref(false)
 const loadingRows = ref(false)
 const loadingContacts = ref(false)
@@ -89,8 +92,7 @@ const form = reactive({
   receipt: '',
   stockStatus: 'Còn hàng',
   description: '',
-  featuresText: '',
-  hotline: '0982 047 123',
+  hotline: COMPANY_HOTLINE_DISPLAY,
   supportHours: '8h - 21h (T2-T7), Chủ Nhật đến 17h',
   note: '',
 })
@@ -105,12 +107,6 @@ const productDescriptionPlaceholder = [
   'Mô tả ngắn 2–4 câu: công dụng chính, đối tượng dùng, cam kết hàng chính hãng…',
 ].join('\n')
 
-const productFeaturesPlaceholder = [
-  'VD — mỗi dòng một điểm nổi bật (không cần gõ dấu "-" ở đầu dòng):',
-  'Thép gió HSS, độ bền và độ cứng cao',
-  'Đường kính mũi 5mm, cán dao 6mm, chiều dài dao 86mm',
-  'Phù hợp khoan thép, gang; tưới nguội ngoài',
-].join('\n')
 const warrantyOptions = [
   { label: 'Không bảo hành', value: '' },
   { label: '1 tháng', value: '1 tháng' },
@@ -211,9 +207,6 @@ const loadCategories = async () => {
   }
 }
 
-const listToLines = (arr: string[] | undefined) => (arr?.length ? arr.join('\n') : '')
-const linesToList = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean)
-
 const resetForm = () => {
   form.blockTitle = blockTitles.value[0] ?? ''
   form.name = ''
@@ -238,8 +231,7 @@ const resetForm = () => {
   form.receipt = ''
   form.stockStatus = 'Còn hàng'
   form.description = ''
-  form.featuresText = ''
-  form.hotline = '0982 047 123'
+  form.hotline = COMPANY_HOTLINE_DISPLAY
   form.supportHours = '8h - 21h (T2-T7), Chủ Nhật đến 17h'
   form.note = ''
   galleryUploads.value = []
@@ -479,8 +471,7 @@ const openEdit = (id: string) => {
   form.stockStatus = item.stockStatus ?? 'Còn hàng'
   galleryUploads.value = item.gallery?.slice(0, 5) ?? []
   form.description = item.description ?? ''
-  form.featuresText = listToLines(item.features)
-  form.hotline = item.hotline ?? '0982 047 123'
+  form.hotline = item.hotline ?? COMPANY_HOTLINE_DISPLAY
   form.supportHours = item.supportHours ?? '8h - 21h (T2-T7), Chủ Nhật đến 17h'
   form.note = item.note ?? ''
   specRows.value =
@@ -525,7 +516,7 @@ const submit = async () => {
     stockStatus: form.stockStatus.trim(),
     gallery: [...galleryUploads.value],
     description: form.description.trim(),
-    features: linesToList(form.featuresText),
+    features: [...DEFAULT_PRODUCT_FEATURE_LINES],
     specs,
     hotline: form.hotline.trim(),
     supportHours: form.supportHours.trim(),
@@ -568,6 +559,28 @@ const resetAll = async () => {
   await loadProducts()
   currentPage.value = 1
   void message.success('Đã tải lại dữ liệu từ Firebase.')
+}
+
+const syncDefaultHighlightsToAllProducts = async () => {
+  if (rows.value.length === 0) {
+    void message.info('Chưa có sản phẩm để đồng bộ.')
+    return
+  }
+  syncingHighlights.value = true
+  try {
+    const list = [...rows.value]
+    for (const row of list) {
+      if (!row.id) continue
+      await updateFirebaseProduct(row.id, { features: [...DEFAULT_PRODUCT_FEATURE_LINES] })
+    }
+    void message.success(`Đã cập nhật điểm nổi bật mặc định cho ${list.length} sản phẩm.`)
+    await loadProducts()
+  } catch (error) {
+    const text = error instanceof Error ? error.message : 'Lỗi không xác định'
+    void message.error(`Đồng bộ thất bại: ${text}`)
+  } finally {
+    syncingHighlights.value = false
+  }
 }
 
 const openCreateCategory = () => {
@@ -705,12 +718,14 @@ onMounted(() => {
         v-if="adminTab === 'products'"
         :dashboard="dashboard"
         :loading-rows="loadingRows"
+        :syncing-highlights="syncingHighlights"
         :rows="pagedRows"
         :current-page="currentPage"
         :page-size="PAGE_SIZE"
         :total="totalItems"
         @create="openCreate"
         @reload="resetAll"
+        @sync-highlights="syncDefaultHighlightsToAllProducts"
         @edit="openEdit"
         @delete="removeItem"
         @page-change="onPageChange"
@@ -972,13 +987,12 @@ onMounted(() => {
             :placeholder="productDescriptionPlaceholder"
           />
         </a-form-item>
-        <a-form-item label="Điểm nổi bật (mỗi dòng một gạch đầu dòng)">
-          <a-textarea
-            v-model:value="form.featuresText"
-            :rows="5"
-            :placeholder="productFeaturesPlaceholder"
-          />
-        </a-form-item>
+        <a-alert
+          type="info"
+          show-icon
+          message="Điểm nổi bật (thông tin liên hệ)"
+          description="Nội dung hiển thị cố định trên mọi trang chi tiết sản phẩm (SAMYOUNG VINA — hotline, email, Facebook, Zalo). Không cần nhập thủ công. Dùng nút «Đồng bộ điểm nổi bật» ở bảng sản phẩm nếu cần cập nhật dữ liệu đã lưu trước đây."
+        />
 
         <p class="admin-form-section-title">Thông số kỹ thuật</p>
         <div
@@ -999,7 +1013,7 @@ onMounted(() => {
               :value="form.hotline"
               inputmode="numeric"
               autocomplete="off"
-              placeholder="VD: 0982 047 123"
+              placeholder="VD: 098 5493875 — 096 1054936"
               @update:value="onHotlineInput"
             />
           </a-form-item>

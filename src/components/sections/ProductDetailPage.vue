@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AppBreadcrumbs from '../layout/AppBreadcrumbs.vue'
+import ProductHighlightContact from '../product/ProductHighlightContact.vue'
+import { COMPANY_HOTLINE_DISPLAY, COMPANY_PHONES } from '../../data/companyPhones'
 
 type ProductSpec = {
   label: string
@@ -311,11 +313,16 @@ onBeforeUnmount(() => {
           </div>
           <div class="benefit-item">
             <strong>Hotline mua hàng</strong>
-            <span>{{ product.hotline }} ({{ product.supportHours }})</span>
+            <span>{{ COMPANY_HOTLINE_DISPLAY }} ({{ product.supportHours }})</span>
           </div>
           <div class="benefit-contact">
             <h3>Tư vấn đặt hàng</h3>
-            <a :href="`tel:${product.hotline.replaceAll(' ', '')}`">{{ product.hotline }}</a>
+            <p class="benefit-contact-phones">
+              <template v-for="(p, i) in COMPANY_PHONES" :key="p.tel">
+                <a :href="`tel:${p.tel}`">{{ p.display }}</a>
+                <span v-if="i < COMPANY_PHONES.length - 1" class="benefit-contact-sep" aria-hidden="true"> · </span>
+              </template>
+            </p>
           </div>
         </aside>
       </article>
@@ -338,9 +345,7 @@ onBeforeUnmount(() => {
           >
             {{ product.description }}
           </div>
-          <ul v-if="product.features.length">
-            <li v-for="feature in product.features" :key="feature">{{ feature }}</li>
-          </ul>
+          <ProductHighlightContact />
           <div class="spec-list">
             <div v-for="spec in product.specs" :key="spec.label" class="spec-item">
               <span>{{ spec.label }}</span>

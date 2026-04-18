@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { COMPANY_PHONES } from '../../data/companyPhones'
 
 const year = new Date().getFullYear()
 
@@ -33,7 +34,14 @@ const infoLinks = [
   { label: 'Chính sách chung', to: '/ve-chung-toi' },
 ]
 
-const socialLinks = [
+type FooterSocialLink = {
+  label: string
+  href: string
+  class: string
+  phoneTitle?: string
+}
+
+const socialLinks: FooterSocialLink[] = [
   {
     label: 'Facebook',
     href: 'https://www.facebook.com/share/1EexnLvRh5/?mibextid=wwXIfr',
@@ -44,11 +52,12 @@ const socialLinks = [
     href: 'https://www.youtube.com/',
     class: 'footer-social-yt',
   },
-  {
+  ...COMPANY_PHONES.map((p) => ({
     label: 'Zalo',
-    href: 'https://zalo.me/0985493875',
+    href: p.zalo,
     class: 'footer-social-zalo',
-  },
+    phoneTitle: p.display,
+  })),
 ]
 
 /** Thay bằng link embed YouTube thật khi có (vd: https://www.youtube.com/embed/VIDEO_ID) */
@@ -74,9 +83,12 @@ const scrollToTop = () => {
               <strong>Địa chỉ trụ sở chính:</strong> Thôn Sáp Mai, Xã Thiên Lộc,
               Thành phố Hà Nội, Việt Nam
             </p>
-            <p>
+            <p class="footer-phones">
               <strong>Điện thoại:</strong>
-              <a href="tel:0962750598" class="footer-hotline">0962750598</a>
+              <template v-for="(p, i) in COMPANY_PHONES" :key="p.tel">
+                <a :href="`tel:${p.tel}`" class="footer-hotline">{{ p.display }}</a>
+                <span v-if="i < COMPANY_PHONES.length - 1" class="footer-phone-sep"> — </span>
+              </template>
             </p>
             <p>
               <strong>Thư điện tử:</strong>
@@ -91,13 +103,14 @@ const scrollToTop = () => {
           <div class="footer-social">
             <a
               v-for="s in socialLinks"
-              :key="s.label"
+              :key="`${s.label}-${s.href}`"
               :href="s.href"
               class="footer-social-btn"
               :class="s.class"
               target="_blank"
               rel="noopener noreferrer"
-              :aria-label="s.label"
+              :aria-label="s.phoneTitle ? `Zalo ${s.phoneTitle}` : s.label"
+              :title="s.phoneTitle ? `Zalo ${s.phoneTitle}` : undefined"
             >
               <span v-if="s.label === 'Zalo'">Zalo</span>
               <span v-else-if="s.label === 'YouTube'" class="footer-social-icon-yt">▶</span>
