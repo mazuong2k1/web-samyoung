@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { FACEBOOK_LINKS } from '../../data/defaultProductHighlight'
-import { COMPANY_PHONES } from '../../data/companyPhones'
+import { PRODUCT_HIGHLIGHT_FACEBOOK_URL } from '../../data/defaultProductHighlight'
+import { COMPANY_PHONE_PRIMARY } from '../../data/companyPhones'
 
 const email = 'cncsamyoungvina@gmail.com'
 </script>
@@ -18,45 +18,37 @@ const email = 'cncsamyoungvina@gmail.com'
       </li>
       <li class="product-highlight-contact__phones">
         <span>Hotline:</span>
-        <template v-for="(p, i) in COMPANY_PHONES" :key="p.tel">
-          <a :href="`tel:${p.tel}`" class="product-highlight-contact__link">{{ p.display }}</a>
-          <span v-if="i < COMPANY_PHONES.length - 1" class="product-highlight-contact__sep" aria-hidden="true">
-            —
-          </span>
-        </template>
+        <a :href="`tel:${COMPANY_PHONE_PRIMARY.tel}`" class="product-highlight-contact__link">{{
+          COMPANY_PHONE_PRIMARY.display
+        }}</a>
       </li>
       <li>
         Email:
         <a :href="`mailto:${email}`" class="product-highlight-contact__link">{{ email }}</a>
       </li>
-      <li class="product-highlight-contact__facebook">
-        <span>Facebook:</span>
-        <span class="product-highlight-contact__fb-wrap">
-          <template v-for="(href, i) in FACEBOOK_LINKS" :key="href">
-            <a
-              :href="href"
-              class="product-highlight-contact__link"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {{ href }}
-            </a>
-            <span v-if="i < FACEBOOK_LINKS.length - 1" class="product-highlight-contact__sep" aria-hidden="true">
-              —
-            </span>
-          </template>
-        </span>
-      </li>
-      <li class="product-highlight-contact__phones">
-        <span>Zalo:</span>
-        <template v-for="(p, i) in COMPANY_PHONES" :key="p.zalo">
-          <a :href="p.zalo" class="product-highlight-contact__link" target="_blank" rel="noopener noreferrer">
-            {{ p.display }}
+      <li class="product-highlight-contact__social-only">
+        <div class="footer-social product-highlight-contact__social-inline">
+          <a
+            :href="PRODUCT_HIGHLIGHT_FACEBOOK_URL"
+            class="footer-social-btn footer-social-fb"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Facebook Samyoung Vina Cnc"
+            title="Facebook"
+          >
+            <span class="footer-social-icon-fb">f</span>
           </a>
-          <span v-if="i < COMPANY_PHONES.length - 1" class="product-highlight-contact__sep" aria-hidden="true">
-            —
-          </span>
-        </template>
+          <a
+            :href="COMPANY_PHONE_PRIMARY.zalo"
+            class="footer-social-btn footer-social-zalo"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Zalo 098 5493875"
+            title="Zalo 098 5493875"
+          >
+            <span>Zalo</span>
+          </a>
+        </div>
       </li>
     </ul>
   </section>
@@ -107,16 +99,13 @@ const email = 'cncsamyoungvina@gmail.com'
   font-weight: 700;
 }
 
-.product-highlight-contact__facebook {
-  display: block;
+.product-highlight-contact__social-only {
+  margin-top: 0.35rem;
 }
 
-.product-highlight-contact__fb-wrap {
-  display: inline;
-}
-
-.product-highlight-contact__facebook .product-highlight-contact__link {
-  word-break: break-all;
+.product-highlight-contact__social-inline.footer-social {
+  margin-top: 0;
+  align-items: center;
 }
 
 .product-highlight-contact__sep {
