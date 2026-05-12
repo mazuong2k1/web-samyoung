@@ -13,17 +13,17 @@ export const quickTiles = [
   {
     title: 'PHỤ KIỆN MÁY PHAY CNC',
     label: '8 nhóm sản phẩm',
-    imageUrl: '/banner/product.jpeg',
+    imageUrl: '/banner/quick-tile-phu-kien-may-cnc.jpg',
   },
   {
     title: 'DỤNG CỤ CẮT SAMYOUNG',
     label: 'Mũi phay, khoan, taro',
-    imageUrl: '/banner/product.jpeg',
+    imageUrl: '/banner/quick-tile-dung-cu-cat-samyoung.jpg',
   },
   {
     title: 'BẦU KẸP, COLLET JINYOUNG',
     label: 'Hàng chính hãng',
-    imageUrl: '/banner/product.jpeg',
+    imageUrl: '/banner/quick-tile-bau-kep-jinyoung.jpg',
   },
 ]
 
